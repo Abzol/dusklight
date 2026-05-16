@@ -37,7 +37,7 @@ Rml::String current_controller_name(int port) {
 Rml::String controller_index_name(u32 index) {
     const char* name = PADGetNameForControllerIndex(index);
     if (name == nullptr) {
-        return fmt::format("Device: {}", index + 1);
+        return fmt::format("Device {}", index + 1);
     }
     return name;
 }
