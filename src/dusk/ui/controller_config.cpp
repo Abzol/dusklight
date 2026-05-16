@@ -354,7 +354,7 @@ void ControllerConfigWindow::build_port_tab(Rml::Element* content, int port) {
         }),
             rightPane, [](Pane& pane) {
                 pane.clear();
-                pane.add_text("Restores all controller configurations for the currently selected controller to defaults.");
+                pane.add_text("Restores all binding configurations for the currently selected device to their defaults.");
         });
     render_page(rightPane, port, mPage);
 }
