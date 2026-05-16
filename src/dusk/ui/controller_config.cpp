@@ -349,7 +349,13 @@ void ControllerConfigWindow::build_port_tab(Rml::Element* content, int port) {
         rightPane, [](Pane& pane) {
             pane.add_text("Treat analog trigger movement as digital L and R button input.");
         });
-
+    leftPane.register_control(leftPane.add_button("Restore Default Controls").on_pressed([this, port] {
+            PADRestoreDefaultMapping(port);
+        }),
+            rightPane, [](Pane& pane) {
+                pane.clear();
+                pane.add_text("Restores all controller configurations for the currently selected controller to defaults.");
+        });
     render_page(rightPane, port, mPage);
 }
 
@@ -631,30 +637,32 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
             }
         }
 
-        pane.add_section("Digital");
-        if (buttons != nullptr) {
-            for (u32 i = 0; i < buttonCount; ++i) {
-                PADButtonMapping& mapping = buttons[i];
-                if (mapping.padButton != PAD_TRIGGER_L && mapping.padButton != PAD_TRIGGER_R) {
-                    continue;
+        if (getSettings().backend.enableAdvancedSettings) {
+            pane.add_section("Digital");
+            if (buttons != nullptr) {
+                for (u32 i = 0; i < buttonCount; ++i) {
+                    PADButtonMapping& mapping = buttons[i];
+                    if (mapping.padButton != PAD_TRIGGER_L && mapping.padButton != PAD_TRIGGER_R) {
+                        continue;
+                    }
+                    pane.add_select_button({
+                                               .key = PADGetButtonName(mapping.padButton),
+                                               .getValue =
+                                                   [this, &mapping, gamepad] {
+                                                       if (mPendingButtonMapping == &mapping) {
+                                                           return pending_button_label();
+                                                       }
+                                                       return native_button_name(
+                                                           gamepad, mapping.nativeButton);
+                                                   },
+                                           })
+                        .on_pressed([this, port, &mapping] {
+                            cancel_pending_binding();
+                            mPendingPort = port;
+                            mPendingBindingArmed = false;
+                            mPendingButtonMapping = &mapping;
+                        });
                 }
-                pane.add_select_button({
-                                           .key = PADGetButtonName(mapping.padButton),
-                                           .getValue =
-                                               [this, &mapping, gamepad] {
-                                                   if (mPendingButtonMapping == &mapping) {
-                                                       return pending_button_label();
-                                                   }
-                                                   return native_button_name(
-                                                       gamepad, mapping.nativeButton);
-                                               },
-                                       })
-                    .on_pressed([this, port, &mapping] {
-                        cancel_pending_binding();
-                        mPendingPort = port;
-                        mPendingBindingArmed = false;
-                        mPendingButtonMapping = &mapping;
-                    });
             }
         }
 
