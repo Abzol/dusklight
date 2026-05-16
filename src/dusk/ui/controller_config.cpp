@@ -37,7 +37,7 @@ Rml::String current_controller_name(int port) {
 Rml::String controller_index_name(u32 index) {
     const char* name = PADGetNameForControllerIndex(index);
     if (name == nullptr) {
-        return fmt::format("Controller {}", index + 1);
+        return fmt::format("Device: {}", index + 1);
     }
     return name;
 }
@@ -124,7 +124,7 @@ Rml::String native_axis_name(const PADAxisMapping& mapping, SDL_Gamepad* gamepad
         return native_button_name(gamepad, static_cast<u32>(mapping.nativeButton));
     }
 
-    return "Not bound";
+    return "Not Bound";
 }
 
 bool is_dpad_button(PADButton button) {
@@ -162,7 +162,7 @@ bool keyboard_escape_pressed() {
 
 Rml::String keyboard_key_name(s32 scancode) {
     if (scancode == PAD_KEY_INVALID) {
-        return "Not bound";
+        return "Not Bound";
     }
     switch (scancode) {
     case PAD_KEY_MOUSE_LEFT:
@@ -303,7 +303,7 @@ void ControllerConfigWindow::build_port_tab(Rml::Element* content, int port) {
             });
     };
 
-    addPageButton(Page::Controller, "Controller", [port] { return current_controller_name(port); }, [] { return false; });
+    addPageButton(Page::Controller, "Device", [port] { return current_controller_name(port); }, [] { return false; });
     addPageButton(Page::Buttons, "Buttons", [] { return Rml::String(">"); }, [] { return false; });
     addPageButton(Page::Triggers, "Triggers", [] { return Rml::String(">"); }, [] { return false; });
     addPageButton(Page::Sticks, "Sticks", [] { return Rml::String(">"); }, [] { return false; });
@@ -365,7 +365,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                     [port] { return PADGetIndexForPort(port) < 0 && !keyboard_active(port); },
             })
             .on_pressed([this, port] {
-                mDoAud_seStartMenu(kSoundItemChange);
+                mDoAud_seStartMenu(kSoundClick);
                 cancel_pending_binding();
                 PADClearPort(port);
                 PADSetKeyboardActive(static_cast<u32>(port), FALSE);
@@ -378,7 +378,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                             .isSelected = [port] { return keyboard_active(port); },
                         })
             .on_pressed([this, port] {
-                mDoAud_seStartMenu(kSoundItemChange);
+                mDoAud_seStartMenu(kSoundClick);
                 cancel_pending_binding();
                 PADClearPort(port);
                 PADSetKeyboardActive(static_cast<u32>(port), TRUE);
@@ -388,7 +388,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
 
         const u32 controllerCount = PADCount();
         if (controllerCount == 0) {
-            pane.add_text("No controllers detected");
+            pane.add_text("No Device Detected");
             break;
         }
 
@@ -400,7 +400,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                             [port, i] { return PADGetIndexForPort(port) == static_cast<s32>(i); },
                     })
                 .on_pressed([this, port, i] {
-                    mDoAud_seStartMenu(kSoundItemChange);
+                    mDoAud_seStartMenu(kSoundClick);
                     cancel_pending_binding();
                     PADSetKeyboardActive(static_cast<u32>(port), FALSE);
                     PADSetPortForIndex(i, port);
@@ -425,17 +425,18 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                     PADKeyButtonBinding* bindings =
                                         PADGetKeyButtonBindings(static_cast<u32>(port), &count);
                                     if (bindings == nullptr) {
-                                        return Rml::String("Not bound");
+                                        return Rml::String("Not Bound");
                                     }
                                     for (u32 i = 0; i < PAD_BUTTON_COUNT; ++i) {
                                         if (bindings[i].padButton == button) {
                                             return keyboard_key_name(bindings[i].scancode);
                                         }
                                     }
-                                    return Rml::String("Not bound");
+                                    return Rml::String("Not Bound");
                                 },
                         })
                     .on_pressed([this, port, button] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -462,7 +463,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
         u32 buttonCount = 0;
         PADButtonMapping* mappings = PADGetButtonMappings(port, &buttonCount);
         if (mappings == nullptr) {
-            pane.add_text("No controller selected");
+            pane.add_text("No Device Selected");
             break;
         }
 
@@ -486,6 +487,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                            },
                                    })
                 .on_pressed([this, port, &mapping] {
+                    mDoAud_seStartMenu(kSoundClick);
                     cancel_pending_binding();
                     mPendingPort = port;
                     mPendingBindingArmed = false;
@@ -512,6 +514,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                            },
                                    })
                 .on_pressed([this, port, &mapping] {
+                    mDoAud_seStartMenu(kSoundClick);
                     cancel_pending_binding();
                     mPendingPort = port;
                     mPendingBindingArmed = false;
@@ -535,17 +538,18 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                     PADKeyButtonBinding* bindings =
                                         PADGetKeyButtonBindings(static_cast<u32>(port), &count);
                                     if (bindings == nullptr) {
-                                        return Rml::String("Not bound");
+                                        return Rml::String("Not Bound");
                                     }
                                     for (u32 i = 0; i < PAD_BUTTON_COUNT; ++i) {
                                         if (bindings[i].padButton == button) {
                                             return keyboard_key_name(bindings[i].scancode);
                                         }
                                     }
-                                    return Rml::String("Not bound");
+                                    return Rml::String("Not Bound");
                                 },
                         })
                     .on_pressed([this, port, button] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -566,17 +570,18 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                     PADKeyAxisBinding* bindings =
                                         PADGetKeyAxisBindings(static_cast<u32>(port), &count);
                                     if (bindings == nullptr) {
-                                        return Rml::String("Not bound");
+                                        return Rml::String("Not Bound");
                                     }
                                     for (u32 i = 0; i < PAD_AXIS_COUNT; ++i) {
                                         if (bindings[i].padAxis == axis) {
                                             return keyboard_key_name(bindings[i].scancode);
                                         }
                                     }
-                                    return Rml::String("Not bound");
+                                    return Rml::String("Not Bound");
                                 },
                         })
                     .on_pressed([this, port, axis] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -599,7 +604,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
         u32 buttonCount = 0;
         PADButtonMapping* buttons = PADGetButtonMappings(port, &buttonCount);
         if (axes == nullptr && buttons == nullptr) {
-            pane.add_text("No controller selected");
+            pane.add_text("No Device Selected");
             break;
         }
 
@@ -623,6 +628,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                                },
                                        })
                     .on_pressed([this, port, &mapping] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -650,6 +656,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                                },
                                        })
                     .on_pressed([this, port, &mapping] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -706,17 +713,18 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                     PADKeyAxisBinding* bindings =
                                         PADGetKeyAxisBindings(static_cast<u32>(port), &count);
                                     if (bindings == nullptr) {
-                                        return Rml::String("Not bound");
+                                        return Rml::String("Not Bound");
                                     }
                                     for (u32 i = 0; i < PAD_AXIS_COUNT; ++i) {
                                         if (bindings[i].padAxis == axis) {
                                             return keyboard_key_name(bindings[i].scancode);
                                         }
                                     }
-                                    return Rml::String("Not bound");
+                                    return Rml::String("Not Bound");
                                 },
                         })
                     .on_pressed([this, port, axis] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -741,7 +749,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
         u32 axisCount = 0;
         PADAxisMapping* axes = PADGetAxisMappings(port, &axisCount);
         if (axes == nullptr) {
-            pane.add_text("No controller selected");
+            pane.add_text("No Device Selected");
             break;
         }
 
@@ -762,6 +770,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                            },
                                    })
                 .on_pressed([this, port, &mapping] {
+                    mDoAud_seStartMenu(kSoundClick);
                     cancel_pending_binding();
                     mPendingPort = port;
                     mPendingBindingArmed = false;
@@ -907,6 +916,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                 },
                         })
                     .on_pressed([this, port, actionBind] {
+                        mDoAud_seStartMenu(kSoundClick);
                         cancel_pending_binding();
                         mPendingPort = port;
                         mPendingBindingArmed = false;
@@ -926,7 +936,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
         u32 buttonCount = 0;
         PADButtonMapping* mappings = PADGetButtonMappings(port, &buttonCount);
         if (mappings == nullptr) {
-            pane.add_text("No controller selected");
+            pane.add_text("No Device Selected");
             break;
         }
 
@@ -950,6 +960,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                                },
                        })
                 .on_pressed([this, port, actionBind] {
+                    mDoAud_seStartMenu(kSoundClick);
                     cancel_pending_binding();
                     mPendingPort = port;
                     mPendingBindingArmed = false;
@@ -1058,6 +1069,7 @@ void ControllerConfigWindow::poll_pending_binding() {
 }
 
 void ControllerConfigWindow::finish_pending_binding(int completedPort) {
+    mDoAud_seStartMenu(kSoundBindingChanged);
     mPendingButtonMapping = nullptr;
     mPendingAxisMapping = nullptr;
     mPendingActionBinding = nullptr;
@@ -1110,11 +1122,11 @@ bool ControllerConfigWindow::pending_input_neutral() const {
 }
 
 Rml::String ControllerConfigWindow::pending_button_label() const {
-    return mPendingBindingArmed ? "Press a button..." : "Waiting...";
+    return mPendingBindingArmed ? "Press a Key or Button..." : "Waiting...";
 }
 
 Rml::String ControllerConfigWindow::pending_axis_label() const {
-    return mPendingBindingArmed ? "Move axis or press a button..." : "Waiting...";
+    return mPendingBindingArmed ? "Move Axis or press a Key or Button..." : "Waiting...";
 }
 
 void ControllerConfigWindow::cancel_pending_binding() {
@@ -1143,7 +1155,7 @@ void ControllerConfigWindow::finish_pending_key_binding() {
 }
 
 Rml::String ControllerConfigWindow::pending_key_label() const {
-    return mPendingBindingArmed ? "Press a key or mouse button..." : "Waiting...";
+    return mPendingBindingArmed ? "Press a Key or Mouse Button..." : "Waiting...";
 }
 
 void ControllerConfigWindow::stop_rumble_test() {
@@ -1159,7 +1171,7 @@ void ControllerConfigWindow::stop_rumble_test() {
 
 Rml::String native_button_name(SDL_Gamepad* gamepad, u32 buttonUntyped) {
     if (buttonUntyped == PAD_NATIVE_BUTTON_INVALID) {
-        return "Not bound";
+        return "Not Bound";
     }
 
     auto button = static_cast<SDL_GamepadButton>(buttonUntyped);
