@@ -425,7 +425,7 @@ void dScnName_c::changeGameScene() {
         if (dusk::getSettings().game.hideTvSettingsScreen) {
             const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
             if (gamemode) {
-                gamemode->mOnSaveLoadedFunction();
+                gamemode->invokeOnSaveLoadedFunction();
             }
         }
 

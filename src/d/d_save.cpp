@@ -1541,7 +1541,7 @@ void dSv_save_c::init() {
 #ifdef TARGET_PC
     const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
     if (gamemode) {
-        gamemode->mOnNewSaveFunction();
+        gamemode->invokeOnNewSaveFunction();
     }
 #endif
 }

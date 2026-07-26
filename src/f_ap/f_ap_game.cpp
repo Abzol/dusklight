@@ -848,7 +848,7 @@ void fapGm_Execute() {
 #ifdef TARGET_PC
     const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
     if (gamemode) {
-        gamemode->mOnTickFunction();
+        gamemode->invokeOnTickFunction();
     }
     dusk::AchievementSystem::get().tick();
     dusk::menu_pointer::end_game_frame();

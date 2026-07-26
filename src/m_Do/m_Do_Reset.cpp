@@ -114,7 +114,7 @@ void mDoRst_resetCallBack(int port, void*) {
 #ifdef TARGET_PC
     const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
     if (gamemode) {
-        gamemode->mOnGameResetFunction();
+        gamemode->invokeOnGameResetFunction();
     }
 #endif
 
@@ -158,7 +158,7 @@ void mDoRst_resetCallBack(int port, void*) {
     mDoRst::onReset();
 #ifdef TARGET_PC
     // Show pre-launch only if we have a registered gamemode and are resetting from the menubar
-    if (dusk::ui::prelaunch_state().showPrelaunchOnReset == false || dusk::gamemode::getGamemodeManager().getRegisteredGamemodes().size() == 1) {
+    if (dusk::ui::prelaunch_state().showPrelaunchOnReset == false) {
         return;
     }
 

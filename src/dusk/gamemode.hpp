@@ -21,16 +21,55 @@ public:
     std::string mFullName;
     std::string mSaveName;
 
-    std::function<void()> mOnActivatedFunction = gamemodeStub;
-    std::function<void()> mOnDeactivatedFunction = gamemodeStub;
-    std::function<void()> mOnPlayFunction = gamemodeStub;
-    std::function<void()> mOnSaveLoadedFunction = gamemodeStub;
-    std::function<void()> mOnNewSaveFunction = gamemodeStub;
-    std::function<void()> mOnGameResetFunction = gamemodeStub;
-    std::function<void()> mOnTickFunction = gamemodeStub;
+    void invokeOnActivatedFunction() const {
+        if (mOnActivatedFunction) {
+            mOnActivatedFunction();
+        }
+    }
 
-private:
-    static void gamemodeStub() {}
+    void invokeOnDeactivatedFunction() const {
+        if (mOnDeactivatedFunction) {
+            mOnDeactivatedFunction();
+        }
+    }
+
+    void invokeOnPlayFunction() const {
+        if (mOnPlayFunction) {
+            mOnPlayFunction();
+        }
+    }
+
+    void invokeOnSaveLoadedFunction() const {
+        if (mOnSaveLoadedFunction) {
+            mOnSaveLoadedFunction();
+        }
+    }
+
+    void invokeOnNewSaveFunction() const {
+        if (mOnNewSaveFunction) {
+            mOnNewSaveFunction();
+        }
+    }
+
+    void invokeOnGameResetFunction() const {
+        if (mOnGameResetFunction) {
+            mOnGameResetFunction();
+        }
+    }
+
+    void invokeOnTickFunction() const {
+        if (mOnTickFunction) {
+            mOnTickFunction();
+        }
+    }
+
+    std::function<void()> mOnActivatedFunction;
+    std::function<void()> mOnDeactivatedFunction;
+    std::function<void()> mOnPlayFunction;
+    std::function<void()> mOnSaveLoadedFunction;
+    std::function<void()> mOnNewSaveFunction;
+    std::function<void()> mOnGameResetFunction;
+    std::function<void()> mOnTickFunction;
 };
 
 class GamemodeManager {

@@ -1352,6 +1352,17 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
             });
 #endif
         leftPane.register_control(
+            leftPane.add_button("Restart To Main Menu").on_pressed([this] {
+                mDoAud_seStartMenu(kSoundClick);
+                pop();
+                ui::prelaunch_state().showPrelaunchOnReset = true;
+                JUTGamePad::C3ButtonReset::sResetSwitchPushing = true;
+            }),
+            rightPane, [](Pane& pane) {
+                pane.add_text(
+                    "Restart Dusklight to the pre-launch menu to change settings, gamemodes, or mods.");
+            });
+        leftPane.register_control(
             leftPane.add_select_button({
                 .key = "Notifications",
                 .getValue = [] {
@@ -1439,7 +1450,8 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
             {
                 .key = "Skip Dusklight Main Menu",
                 .helpText = "When starting Dusklight, skip the main menu and boot straight into the "
-                            "game if a disc image is available.",
+                            "game if a disc image is available.<br/><br/>Note: If any mods register gamemodes, "
+                            "then this option will be ignored.",
             });
         config_bool_select(leftPane, rightPane, getSettings().backend.checkForUpdates,
             {

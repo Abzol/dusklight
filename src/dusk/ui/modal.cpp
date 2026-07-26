@@ -27,7 +27,6 @@ Modal::Modal(Props props) : WindowSmall("modal", "modal-dialog"), mProps(std::mo
     actions->SetClass("modal-actions", true);
     if (props.isVertical) {
         actions->SetClass("modal-actions-vertical", true);
-    }else{
     }
 
     for (auto& action : mProps.actions) {

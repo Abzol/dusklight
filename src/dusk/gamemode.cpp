@@ -72,7 +72,7 @@ void GamemodeManager::setCurrentGamemode(const GamemodeId& id) {
     }
     const Gamemode* currentGamemode = getCurrentGamemode();
     if (currentGamemode) {
-        currentGamemode->mOnDeactivatedFunction();
+        currentGamemode->invokeOnDeactivatedFunction();
     }
     if (mRegisteredGamemodes.find(id) == mRegisteredGamemodes.end()) {
         DuskGamemodeLog.warn("Attempting to set current game mode to {} when it hasn't been registered!", id);
@@ -86,7 +86,7 @@ void GamemodeManager::setCurrentGamemode(const GamemodeId& id) {
     if (currentGamemode) {
         // Set the loaded save file to our gamemode's save name
         mDoMemCd_SetFileName(currentGamemode->mSaveName);
-        currentGamemode->mOnActivatedFunction();
+        currentGamemode->invokeOnActivatedFunction();
     }
 }
 

@@ -701,7 +701,7 @@ void Prelaunch::rebuild_menu_buttons() {
     }
 }
 
-static std::string getPlayButtonText() {
+static std::string get_playbutton_text() {
     auto& state = prelaunch_state();
     const bool activeDiscLoaded = !state.activeDiscPath.empty();
     if (activeDiscLoaded == false) {
@@ -765,7 +765,7 @@ void Prelaunch::build_menu_buttons() {
         // Set the gamemode to the last used before showing the play button
         dusk::gamemode::getGamemodeManager().setGamemodeToPrevious();
 
-        mMenuButtons.push_back(std::make_unique<Button>(menuList, getPlayButtonText()));
+        mMenuButtons.push_back(std::make_unique<Button>(menuList, get_playbutton_text()));
         mMenuButtons.back()->on_pressed([this] {
             if (prelaunch_state().activeDiscPath.empty()) {
                 open_iso_picker();
@@ -791,7 +791,7 @@ void Prelaunch::build_menu_buttons() {
             const dusk::gamemode::Gamemode* gamemode =
                 dusk::gamemode::getGamemodeManager().getCurrentGamemode();
             if (gamemode) {
-                gamemode->mOnPlayFunction();
+                gamemode->invokeOnPlayFunction();
             }
 
             IsGameLaunched = true;
@@ -958,7 +958,7 @@ void Prelaunch::update() {
     }
 
     if (!mMenuButtons.empty()) {
-        mMenuButtons[0]->set_text(getPlayButtonText());
+        mMenuButtons[0]->set_text(get_playbutton_text());
     }
 
     const auto discStatusLabel = mDiscStatus->GetElementById("disc-status-label");
