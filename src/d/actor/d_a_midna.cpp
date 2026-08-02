@@ -3303,6 +3303,8 @@ int daMidna_c::execute() {
 #if TARGET_PC
                 if ((fopAcIt_Judge((fopAcIt_JudgeFunc)daMidna_searchNpc, &far_)) &&
                     !dusk::getSettings().game.canTransformAnywhere) {
+#else
+                if (fopAcIt_Judge((fopAcIt_JudgeFunc)daMidna_searchNpc, &far_)) {
 #endif
                     if (!far_) {
                         onStateFlg0(FLG0_NPC_NEAR);
