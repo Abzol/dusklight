@@ -648,40 +648,54 @@ dusklight when their condition is met.
 Note: for any gamemode wishing to use the vanilla set of savefiles, use `gczelda2` as the save file name.
 
 ```cpp
+// An example that shows registering a gamemode with function hooks that are scoped to the gamemode being active
+IMPORT_SERVICE(LogService, svc_log);
+IMPORT_SERVICE(HookService, svc_hook);
 IMPORT_SERVICE(GamemodeService, svc_gamemode);
 
 #define MY_GAMEMODE_ID "gamemodeid"
-#define ONLY_GAMEMODE(ctx, id)                                                                                         \
-    {                                                                                                                  \
-        bool isGamemodeActive;                                                                                         \
-        svc_gamemode->is_active(ctx, id, &isGamemodeActive);                                                           \
-        if (!isGamemodeActive) {                                                                                       \
-            return HOOK_CONTINUE;                                                                                      \
-        }                                                                                                              \
-    }
-#define ONLY_GAMEMODE_MYGAMEMODE ONLY_GAMEMODE(ctx, MY_GAMEMODE_ID)
+
 
 static HookAction myFunctionHook(ModContext *ctx, void *args, void *, void *) {
-    // Note: normal function hooks will need to check if the gamemode is active 
-    ONLY_GAMEMODE_MYGAMEMODE // A macro like this can make it easy
-
-    // Code that runs when only the Gamemode is active
+    // If we wish to have this hook only run while the gamemode is registered, we need to hook the function from the
+    // gamemode's onActivatedFunction, and uninstall the hook during the onDeactivatedFunction. An example is given below
 
     return HOOK_CONTINUE;
+}
+
+DEFINE_HOOK(fopAcM_createItem, CreateItem);
+
+void onGamemodeActivated() {
+    // Setup the gamemode, Add any hooks that are gamemode specific
+    // Overlay any files that are gamemode specific
+    ModResult result = mods::hook_add_pre<CreateItem>(svc_hook, myFunctionHook);
+    if (result != MOD_OK) {
+        svc_log->error(mod_ctx, "failed to install hook to fopAcM_createItem");
+    }     
+}
+
+void onGamemodeDeactivated() {
+    // Uninstall any hooks that are gamemode specific
+    // Remove overlays to any files that are gamemode specific
+    ModResult result = mods::hook_uninstall<CreateItem>();
+    if (result != MOD_OK) {
+        svc_log->error(mod_ctx, "failed to uninstall CreateItem hook");
+    }   
 }
 
 void onSaveLoaded() {
     // This function will be invoked by the game as a save is loaded
 }
 
+// Register the gamemode when the mod is initialized
 const GamemodeDesc gamemodeDesc = {
     .gamemodeId = MY_GAMEMODE_ID,
     .fullName = "Gamemode Name",
     // The save name should be something that other gamemodes will not try to use, so appending your name to it
     // is reccomended
     .saveName = "my-unique-save-name_developer-name",
-    .onActivatedFunction = nullptr, // Called when the gamemode is selected on the prelaunch menu (or is launched)
-    .onDeactivatedFunction = nullptr, // Called when the gamemode is deselected on the prelaunch menu (or the mod is disabled)
+    .onActivatedFunction = onGamemodeActivated, // Called when the gamemode is selected on the prelaunch menu (or is launched)
+    .onDeactivatedFunction = onGamemodeDeactivated, // Called when the gamemode is deselected on the prelaunch menu (or the mod is disabled)
     .onPlayFunction = nullptr, // Called when "Play" is pressed on the prelaunch menu
     .onSaveLoadedFunction = onSaveLoaded, // Called when a save is loaded
     .onNewSaveFunction = nullptr, // Called after a new savefile is created

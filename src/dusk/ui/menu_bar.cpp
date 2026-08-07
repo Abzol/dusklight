@@ -95,13 +95,15 @@ MenuBar::MenuBar()
                                     dismiss(modal);
                                     return;
                                 }
+                                dismiss(modal);
                                 if (gamemode::getGamemodeManager().getRegisteredGamemodes().size() > 1) {
                                     // If we have gamemodes registered, show pre-launch on a menubar reset
                                     prelaunch_state().showPrelaunchOnReset = true;
+                                    Document::hide(true);
+                                }else {
+                                    hide(false);
                                 }
                                 JUTGamePad::C3ButtonReset::sResetSwitchPushing = true;
-                                dismiss(modal);
-                                Document::hide(true);
                             },
                     },
                 },

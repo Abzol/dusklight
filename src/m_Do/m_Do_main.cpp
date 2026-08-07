@@ -728,6 +728,8 @@ int game_main(int argc, char* argv[]) {
         saveConfigBeforePrelaunch = true;
     }
 
+    bool skipPreLaunchUI = dusk::getSettings().backend.skipPreLaunchUI.getValue();
+
     std::string dvd_path = dusk::getSettings().backend.isoPath;
     bool dvd_opened = false;
     if (parsed_arg_options.count("dvd")) {
@@ -744,14 +746,13 @@ int game_main(int argc, char* argv[]) {
                     dusk::DiscVerificationState::Unknown);
                 dusk::config::save();
                 dusk::IsGameLaunched = true;
+                skipPreLaunchUI = true;
             }
         } else {
             DuskLog.warn("DVD image from command line failed validation: {}, opening prelaunch UI", dvd_path);
             forcePreLaunchUI = true;
         }
     }
-
-    bool skipPreLaunchUI = dusk::getSettings().backend.skipPreLaunchUI.getValue();
 
     // If we can't load right into the game, stop requesting to load a stage or save
     if (forcePreLaunchUI || dvd_path.empty()) {
@@ -907,9 +908,14 @@ int game_main(int argc, char* argv[]) {
         dusk::speedrun::registerSpeedrunGamemode();
     }
 
-    if (skipPreLaunchUI == true && dusk::gamemode::getGamemodeManager().getRegisteredGamemodes().size() > 1 && dusk::getSettings().backend.skipPreLaunchUI.getValue()) {
-        // Force pre-launch if we have registered gamemodes that we need to choose from
-        dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
+    if (skipPreLaunchUI == true) {
+        if (dusk::gamemode::getGamemodeManager().getRegisteredGamemodes().size() > 1 && dusk::getSettings().backend.skipPreLaunchUI.getValue()) {
+            // Force pre-launch if we have registered gamemodes that we need to choose from
+            dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
+        } else {
+            // If we get back to prelaunch later, tell it that we've already started the game
+            dusk::ui::prelaunch_state().firstLaunch = false;
+        }
     }
 
     OSReport("Starting main01 (Game Loop)...\n");
