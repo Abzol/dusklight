@@ -32,6 +32,7 @@ struct Toast {
     Rml::String title;
     Rml::String content;
     clock::duration duration;
+    Rml::String modId;
 };
 
 // Button clicked/pressed
