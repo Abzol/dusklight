@@ -633,6 +633,9 @@ if (svc_camera->get_camera(mod_ctx, game_view, &camera) == MOD_OK) {
 first in-game frame. Projection matrices match the renderer's WebGPU clip convention and renderer depth convention
 (reversed-Z by default).
 
+Camera operators allow overriding the main camera. When an operator callback returns true, its values replace the camera
+state for the current frame. Register and unregister using `register_camera_operator` / `unregister_camera_operator`.
+
 ---
 
 ## Hooking Game Functions
