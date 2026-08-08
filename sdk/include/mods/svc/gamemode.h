@@ -7,15 +7,18 @@
 #define GAMEMODE_SERVICE_MAJOR 1u
 #define GAMEMODE_SERVICE_MINOR 0u
 
+struct dFile_select_c;
+
 typedef struct {
     const char* gamemodeId;
     const char* fullName;
-    const char* saveName;
+    const char saveName[32]; // GCI Filenames are limited to 31 characters
     void (*onActivatedFunction)();
     void (*onDeactivatedFunction)();
     void (*onPlayFunction)();
     void (*onSaveLoadedFunction)();
     void (*onNewSaveFunction)();
+    bool (*onNewSaveSelectFunction)(dFile_select_c* fileSelect); // Should return true when any custom options flows are finished
     void (*onGameResetFunction)();
     void (*onTickFunction)();
 } GamemodeDesc;

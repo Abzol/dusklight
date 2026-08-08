@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <map>
+#include "d/d_file_select.h"
 
 namespace dusk::gamemode {
 using GamemodeId = std::string;
@@ -50,6 +51,13 @@ public:
             mOnNewSaveFunction();
         }
     }
+    
+    bool invokeOnNewSaveSelectFunction(dFile_select_c* fileSelect) const {
+        if (mOnNewSaveSelectFunction) {
+            return mOnNewSaveSelectFunction(fileSelect);
+        }
+        return true;
+    }
 
     void invokeOnGameResetFunction() const {
         if (mOnGameResetFunction) {
@@ -68,6 +76,7 @@ public:
     std::function<void()> mOnPlayFunction;
     std::function<void()> mOnSaveLoadedFunction;
     std::function<void()> mOnNewSaveFunction;
+    std::function<bool(dFile_select_c* fileSelect)> mOnNewSaveSelectFunction;
     std::function<void()> mOnGameResetFunction;
     std::function<void()> mOnTickFunction;
 };

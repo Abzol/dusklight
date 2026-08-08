@@ -692,17 +692,83 @@ const GamemodeDesc gamemodeDesc = {
     .gamemodeId = MY_GAMEMODE_ID,
     .fullName = "Gamemode Name",
     // The save name should be something that other gamemodes will not try to use, so appending your name to it
-    // is reccomended
-    .saveName = "my-unique-save-name_developer-name",
+    // is reccomended. Note: it is limited to 31 characters long
+    .saveName = "my-unique-save_developer-name",
     .onActivatedFunction = onGamemodeActivated, // Called when the gamemode is selected on the prelaunch menu (or is launched)
     .onDeactivatedFunction = onGamemodeDeactivated, // Called when the gamemode is deselected on the prelaunch menu (or the mod is disabled)
     .onPlayFunction = nullptr, // Called when "Play" is pressed on the prelaunch menu
     .onSaveLoadedFunction = onSaveLoaded, // Called when a save is loaded
     .onNewSaveFunction = nullptr, // Called after a new savefile is created
+    .onNewSaveSelectFunction = nullptr, // Called while the flow before the file name select is ran (see below)
     .onGameResetFunction = nullptr, // Called when the game is reset
     .onTickFunction = nullptr, // Called every game tick while the gamemode is active
 };
 svc_gamemode->register_gamemode(mod_ctx, &gamemodeDesc);
+```
+
+Within the gamemode service, a gamemode can also request to load a UI for per-save file settings when the button to
+create a new file is pressed.
+
+```cpp
+#include "d/d_file_select.h" // Requires game feature
+IMPORT_SERVICE(GamemodeService, svc_gamemode);
+IMPORT_SERVICE(UiService, svc_ui);
+
+bool proceedUI = false;
+UiWindowHandle windowHandle;
+
+bool onNewSaveSelect(dFile_select_c *fileSelect) {
+    if (fileSelect->mGamemodeSaveStartBuildUi) {
+        proceedUI = false;
+        UiTabDesc tabs[1]{};
+
+        tabs[0].struct_size = sizeof(UiTabDesc);
+        tabs[0].title = "Play";
+        tabs[0].build = [](ModContext* ctx, UiWindowHandle, UiElementHandle leftPane, UiElementHandle rightPane, void*, ModError*) {
+            UiControlDesc desc = UI_CONTROL_DESC_INIT;
+            desc.kind = UI_CONTROL_BUTTON;
+            desc.label = "Play";
+            desc.help_rml = "Play Button";
+            desc.on_pressed = [](ModContext* ctx, void* userdata) {
+                proceedUI = true;
+                svc_ui->window_close(ctx, *static_cast<UiWindowHandle*>(userdata));
+            };
+            desc.user_data = &windowHandle;
+            svc_ui->pane_add_control(mod_ctx, leftPane, &desc, &windowHandle);
+            return MOD_OK;
+        };
+
+        UiWindowDesc desc = UI_WINDOW_DESC_INIT;
+        desc.tabs = tabs;
+        desc.tab_count = 1;
+        desc.user_data = fileSelect;
+        desc.on_closed = [](ModContext *, UiWindowHandle, void *userdata) {
+            dFile_select_c *i_this = static_cast<dFile_select_c *>(userdata);
+
+            // if closing the window through backing out, return to file select
+            if (!proceedUI) {
+                i_this->backToDataSelectMove();
+            }
+        };
+
+        svc_ui->window_push(mod_ctx, &desc, &windowHandle);
+    }
+
+    // When we hit play in the UI, return true (tells the file select that we can proceed)
+    if (proceedUI) {
+        return true;
+    }
+    return false;
+}
+
+const GamemodeDesc gamemodeDesc = {
+    .gamemodeId = "my-gamemode-id",
+    .fullName = "My Gamemode",
+    .saveName = "my-gamemode-save",
+    .onNewSaveSelectFunction = onNewSaveSelect,
+};
+svc_gamemode->register_gamemode(mod_ctx, &gamemodeDesc);
+
 ```
 
 ---

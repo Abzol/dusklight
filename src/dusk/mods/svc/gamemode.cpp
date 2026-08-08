@@ -65,16 +65,10 @@ ModResult register_gamemode(ModContext* ctx, const GamemodeDesc* desc) {
         }
     }
 
-    std::string saveName;
-    if (!desc->saveName) {
-        Log.warn("Attempted to register gamemode {} with a null save name! Defaulting to: (gczelda2)",id);
+    std::string saveName = desc->saveName;
+    if (saveName.empty()) {
+        Log.warn("Attempted to register gamemode {} with an empty save name! Defaulting to: (gczelda2)",id);
         saveName = "gczelda2";
-    }else{
-        saveName = desc->saveName;
-        if (saveName.empty()) {
-            Log.warn("Attempted to register gamemode {} with an empty save name! Defaulting to: (gczelda2)",id);
-            saveName = "gczelda2";
-        }
     }
    
     dusk::gamemode::Gamemode gamemode(id, fullName, saveName);
@@ -93,6 +87,9 @@ ModResult register_gamemode(ModContext* ctx, const GamemodeDesc* desc) {
     }
     if (desc->onNewSaveFunction) {
         gamemode.mOnNewSaveFunction = desc->onNewSaveFunction;
+    }
+    if (desc->onNewSaveSelectFunction) {
+        gamemode.mOnNewSaveSelectFunction = desc->onNewSaveSelectFunction;
     }
     if (desc->onGameResetFunction) {
         gamemode.mOnGameResetFunction = desc->onGameResetFunction;

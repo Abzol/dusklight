@@ -29,6 +29,7 @@
 #include "dusk/menu_pointer.h"
 #include "helpers/string.hpp"
 #include "dusk/mods/svc/save.hpp"
+#include "dusk/gamemode.hpp"
 
 namespace {
 constexpr u8 pointer_target(u8 group, u8 index) noexcept {
@@ -1312,6 +1313,24 @@ void dFile_select_c::selectDataNameMove() {
     bool isFileRecScale = fileRecScaleAnm2();
     bool isNameMove = nameMoveAnm();
     bool isModoruTxtDisp = modoruTxtDispAnm();
+
+#ifdef TARGET_PC
+    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+    if (gamemode) {
+        if (isHeaderTxtChange == true && isFileRecScale == true && isModoruTxtDisp == true) {    
+            bool gamemodeFlowClosed = gamemode->invokeOnNewSaveSelectFunction(this);
+            if (mGamemodeSaveStartBuildUi == true) {
+                mGamemodeSaveStartBuildUi = false;
+            }
+            if (!gamemodeFlowClosed) {
+                return;
+            }
+        }else {
+            return;
+        }
+    }
+    mGamemodeSaveStartBuildUi = true;
+#endif
 
     if (isHeaderTxtChange == true && isFileRecScale == true && isNameMove == true &&
         isModoruTxtDisp == true)

@@ -420,6 +420,14 @@ public:
     bool pointerMenuSelect();
     bool pointerCopyDataToSelect();
     bool pointerYesNoSelect(bool errorSelect);
+    void backToDataSelectMove() {
+        headerTxtSet(0x43, 1, 0);
+        fileRecScaleAnmInitSet2(0.0f, 1.0f);
+        nameMoveAnmInitSet(0xd29, 0xd1f);
+        modoruTxtDispAnmInit(0);
+        mDataSelProc = DATASELPROC_NAME_TO_DATA_SELECT_MOVE;
+        mGamemodeSaveStartBuildUi = true;
+    }
     #endif
     void _draw();
     void errorMoveAnmInitSet(int, int);
@@ -733,6 +741,7 @@ public:
     #endif
 #ifdef TARGET_PC
     dDlst_FileSelFade_c mFadeDlst;
+    bool mGamemodeSaveStartBuildUi = true;
 #endif
 
     #if PLATFORM_WII || PLATFORM_SHIELD
