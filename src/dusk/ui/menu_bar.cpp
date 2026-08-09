@@ -12,6 +12,7 @@
 #include "dusk/main.h"
 #include "dusk/settings.h"
 #include "editor.hpp"
+#include "f_op/f_op_scene_mng.h"
 #include "f_pc/f_pc_manager.h"
 #include "f_pc/f_pc_name.h"
 #include "imgui.h"
@@ -134,6 +135,10 @@ MenuBar::MenuBar() : Document(kDocumentSource), mRoot(mDocument->GetElementById(
             m_speedrunInfo.reset();
             if (getSettings().game.liveSplitEnabled) {
                 dusk::speedrun::reset();
+            }
+            auto* playScene = fpcM_SearchByName(fpcNm_PLAY_SCENE_e);
+            if (playScene != nullptr) {
+                fopScnM_ChangeReq((scene_class*)playScene, fpcNm_NAME_SCENE_e, 0x7FFF, 0);
             }
             hide(false);
         });
