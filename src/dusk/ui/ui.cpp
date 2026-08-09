@@ -211,7 +211,7 @@ void show_top_document() noexcept {
 
 bool any_document_visible() noexcept {
     return std::any_of(sDocumentStack.begin(), sDocumentStack.end(),
-        [](const auto& doc) { return doc && doc->visible(); });
+        [](const auto& doc) { return doc && doc->visible() && !doc->pending_close(); });
 }
 
 bool is_prelaunch_open() noexcept {

@@ -40,6 +40,10 @@ output[open] {
     overflow-y: scroll;
 }
 
+console:not([open]) {
+    pointer-events: none;
+}
+
 line {
     display: block;
     white-space: nowrap;
@@ -47,6 +51,16 @@ line {
 
 line.cmd {
     color: #FFD966;
+}
+
+line.copyable {
+    color: #80C8FF;
+    cursor: pointer;
+}
+
+line.copyable:hover {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 12%);
 }
 
 console input {

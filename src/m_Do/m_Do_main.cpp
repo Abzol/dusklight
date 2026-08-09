@@ -55,6 +55,7 @@
 #include "dusk/frame_interpolation.h"
 #include "dusk/game_clock.h"
 #include "dusk/gyro.h"
+#include "dusk/commands.hpp"
 #include "dusk/game_combos.h"
 #include "dusk/mouse.h"
 #include "dusk/imgui/ImGuiConsole.hpp"
@@ -299,6 +300,7 @@ void main01(void) {
                     dusk::gyro::read(pacing.sim_pace);
                     dusk::processGameCombos();
                     fapGm_Execute();
+                    dusk::processCameraCommands();
                     mDoAud_Execute();
                     dusk::game_clock::commit_sim_tick();
                 }
@@ -319,6 +321,7 @@ void main01(void) {
             dusk::mouse::read();
             dusk::gyro::read(pacing.presentation_dt_seconds);
             dusk::processGameCombos();
+            dusk::processCameraCommands();
 
             dusk::frame_interp::begin_frame(dusk::FrameInterpMode::Off, true, 0.0f);
             dusk::frame_interp::set_ui_tick_pending(true);

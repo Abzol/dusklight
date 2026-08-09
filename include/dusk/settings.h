@@ -292,8 +292,25 @@ struct CollisionViewSettings {
     float drawRange;
 };
 
+struct TriggerViewSettings {
+    bool loadZones;
+    bool eventAreas;
+    bool switchAreas;
+    bool eventTags;
+    bool midnaStops;
+    bool twilightGates;
+    bool checkpoints;
+    bool paths;
+    bool transformDists;
+    bool attentionDists;
+    bool purpleMistAvoid;
+    bool leevers;
+    float opacity;
+};
+
 struct TransientSettings {
     CollisionViewSettings collisionView;
+    TriggerViewSettings triggerView;
     bool skipFrameRateLimit;
     bool moveLinkActive;
     bool stateShareLoadActive;

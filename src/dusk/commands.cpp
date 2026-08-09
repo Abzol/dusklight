@@ -1,11 +1,14 @@
 #include "commands.hpp"
 
 #include "JSystem/JUtility/JUTGamePad.h"
+#include "SSystem/SComponent/c_math.h"
 #include "SSystem/SComponent/c_sxyz.h"
 #include "SSystem/SComponent/c_xyz.h"
 #include "c/c_damagereaction.h"
 #include "d/actor/d_a_alink.h"
+#include "d/d_com_inf_actor.h"
 #include "d/d_com_inf_game.h"
+#include "d/d_camera.h"
 #include "d/d_kankyo.h"
 #include "d/d_stage.h"
 #include "dusk/game_clock.h"
@@ -192,10 +195,78 @@ static int FindActorCallback(void* p, void* ctx) {
     return 1;
 }
 
+struct CameraFlyState {
+    bool active    = false;
+    cXyz startEye;
+    cXyz startCenter;
+    cXyz endEye;
+    cXyz endCenter;
+    float duration = 0.0f;
+    float elapsed  = 0.0f;
+};
+CameraFlyState s_cameraFly;
+
+static dCamera_c* getCamera() { return dCam_getBody(); }
+
+static cXyz anglesToDir(s16 h, s16 v) {
+    return cXyz(cM_scos(v) * cM_ssin(h), cM_ssin(v), cM_scos(v) * cM_scos(h));
+}
+
+static void cameraToAngles(dCamera_c* cam, s16& h, s16& v) {
+    const cXyz eye = cam->iEye();
+    const cXyz ctr = cam->iCenter();
+    const float dx = ctr.x - eye.x;
+    const float dy = ctr.y - eye.y;
+    const float dz = ctr.z - eye.z;
+    const float hDist = sqrtf(dx * dx + dz * dz);
+    h = cM_atan2s(dx, dz);
+    v = cM_atan2s(dy, hDist);
+}
+
+static float smoothstep(float t) {
+    t = std::clamp(t, 0.0f, 1.0f);
+    return t * t * (3.0f - 2.0f * t);
+}
+
+static constexpr float kCamTargetDist = 100.0f;
+
 }  // namespace
 
+bool isCameraDetached() { return s_cameraFly.active; }
+
+void processCameraCommands() {
+    if (!s_cameraFly.active) { return; }
+    dCamera_c* cam = getCamera();
+    if (cam == nullptr) { s_cameraFly.active = false; return; }
+
+    cXyz eye, center;
+
+    if (s_cameraFly.duration <= 0.0f) {
+        eye    = s_cameraFly.endEye;
+        center = s_cameraFly.endCenter;
+    } else {
+        s_cameraFly.elapsed += dusk::game_clock::sim_pace();
+        const float t = smoothstep(s_cameraFly.elapsed / s_cameraFly.duration);
+        eye    = s_cameraFly.startEye    + (s_cameraFly.endEye    - s_cameraFly.startEye)    * t;
+        center = s_cameraFly.startCenter + (s_cameraFly.endCenter - s_cameraFly.startCenter) * t;
+
+        if (s_cameraFly.elapsed >= s_cameraFly.duration) {
+            eye    = s_cameraFly.endEye;
+            center = s_cameraFly.endCenter;
+            s_cameraFly.startEye    = s_cameraFly.endEye;
+            s_cameraFly.startCenter = s_cameraFly.endCenter;
+            s_cameraFly.duration    = 0.0f;
+        }
+    }
+
+    cam->Reset(center, eye);
+    cam->mDebugFlyCam.initialized = false;
+}
+
 void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutput& output) {
-    output(fmt::format(FMT_STRING("> {}"), cmdLine));
+    if (state.echoEnabled) {
+        output(fmt::format(FMT_STRING("> {}"), cmdLine));
+    }
 
     if (!cmdLine.empty()) {
         if (state.history.empty() || state.history.back() != cmdLine) {
@@ -457,6 +528,27 @@ void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutp
         return;
     }
 
+    if (cmd == "freeze" || cmd == "unfreeze") {
+        const bool doFreeze = (cmd == "freeze");
+        if (args.size() < 2) {
+            g_dComIfAc_gameInfo.mPause = doFreeze;
+            output(doFreeze ? "Global freeze on" : "Global freeze off");
+            return;
+        }
+        auto* ac = ParseActorArg(args[1], state.foundProcId, output);
+        if (ac == nullptr) {
+            return;
+        }
+        if (doFreeze) {
+            fpcM_PauseEnable(ac, 1);
+            output(fmt::format(FMT_STRING("Froze actor {}"), (unsigned int)ac->id));
+        } else {
+            fpcM_PauseDisable(ac, 1);
+            output(fmt::format(FMT_STRING("Unfroze actor {}"), (unsigned int)ac->id));
+        }
+        return;
+    }
+
     if (cmd == "rate") {
         if (args.size() >= 2) {
             const auto hz = ParseLong(args[1]);
@@ -565,11 +657,172 @@ void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutp
         return;
     }
 
+    if (cmd == "camera") {
+        const std::string sub = args.size() >= 2 ? args[1] : "";
+
+        if (sub == "attach") {
+            s_cameraFly.active = false;
+            output("Camera attached");
+            return;
+        }
+
+        auto* cam = getCamera();
+        if (cam == nullptr) { output("Error: camera not available"); return; }
+
+        if (sub == "detach") {
+            s_cameraFly.active      = true;
+            s_cameraFly.duration    = 0.0f;
+            s_cameraFly.startEye    = s_cameraFly.endEye    = cam->iEye();
+            s_cameraFly.startCenter = s_cameraFly.endCenter = cam->iCenter();
+            output("Camera detached");
+            return;
+        }
+
+        if (sub == "tp") {
+            // camera tp @<ref>
+            if (args.size() >= 3 && !args[2].empty() && args[2][0] == '@') {
+                auto* ac = ParseActorArg(args[2], state.foundProcId, output);
+                if (ac == nullptr) { return; }
+                const cXyz actorPos = ac->current.pos;
+                const cXyz dir = anglesToDir(ac->shape_angle.y, 0);
+                const cXyz newEye    = cXyz(actorPos.x - dir.x * kCamTargetDist,
+                                            actorPos.y - dir.y * kCamTargetDist + 50.0f,
+                                            actorPos.z - dir.z * kCamTargetDist);
+                s_cameraFly.active = true; s_cameraFly.duration = 0.0f;
+                s_cameraFly.startEye = s_cameraFly.endEye = newEye;
+                s_cameraFly.startCenter = s_cameraFly.endCenter = actorPos;
+                    output(fmt::format(FMT_STRING("Camera moved to actor {}"), ac->id));
+                return;
+            }
+            // camera tp x y z [h] [v]
+            if (args.size() < 5) {
+                output("Usage: camera tp <x> <y> <z> [h_angle] [v_angle]  |  camera tp @<ref>");
+                return;
+            }
+            const auto pos = ParseXYZ(args, 2);
+            if (!pos) { output("Error: invalid coordinates"); return; }
+            s16 h = 0, v = 0;
+            cameraToAngles(cam, h, v);
+            if (args.size() >= 6) {
+                const auto hv = ParseLong(args[5]);
+                if (!hv) { output("Error: invalid h_angle"); return; }
+                h = (s16)*hv;
+            }
+            if (args.size() >= 7) {
+                const auto vv = ParseLong(args[6]);
+                if (!vv) { output("Error: invalid v_angle"); return; }
+                v = (s16)*vv;
+            }
+            const cXyz dir = anglesToDir(h, v);
+            const cXyz center = cXyz(pos->x + dir.x * kCamTargetDist,
+                                     pos->y + dir.y * kCamTargetDist,
+                                     pos->z + dir.z * kCamTargetDist);
+            s_cameraFly.active = true; s_cameraFly.duration = 0.0f;
+            s_cameraFly.startEye = s_cameraFly.endEye = *pos;
+            s_cameraFly.startCenter = s_cameraFly.endCenter = center;
+            output(fmt::format(FMT_STRING("Camera teleported to ({:.2f}, {:.2f}, {:.2f})"),
+                pos->x, pos->y, pos->z));
+            return;
+        }
+
+        if (sub == "pos") {
+            s16 h = 0, v = 0;
+            cameraToAngles(cam, h, v);
+            const cXyz eye = cam->iEye();
+            output(fmt::format(FMT_STRING("Camera: ({:.2f}, {:.2f}, {:.2f}) h={} v={}"),
+                eye.x, eye.y, eye.z, (int)h, (int)v));
+            return;
+        }
+
+        if (sub == "fly") {
+            // camera fly <time> <x> <y> <z> [h] [v]  |  camera fly <time> @<ref>
+            if (args.size() < 4) {
+                output("Usage: camera fly <time> <x> <y> <z> [h_angle] [v_angle]  |  camera fly <time> @<ref>");
+                return;
+            }
+            const auto t = ParseFloat(args[2]);
+            if (!t || *t <= 0) { output("Error: invalid time"); return; }
+            const float flyTime = *t;
+
+            cXyz targetPos;
+            s16 h = 0, v = 0;
+
+            if (!args[3].empty() && args[3][0] == '@') {
+                auto* ac = ParseActorArg(args[3], state.foundProcId, output);
+                if (ac == nullptr) { return; }
+                targetPos = ac->current.pos;
+                h = ac->shape_angle.y;
+                v = 0;
+            } else {
+                if (args.size() < 6) {
+                    output("Usage: camera fly <time> <x> <y> <z> [h_angle] [v_angle]  |  camera fly <time> @<ref>");
+                    return;
+                }
+                const auto pos = ParseXYZ(args, 3);
+                if (!pos) { output("Error: invalid coordinates"); return; }
+                targetPos = *pos;
+                cameraToAngles(cam, h, v);
+                if (args.size() >= 7) {
+                    const auto hv = ParseLong(args[6]); if (!hv) { output("Error: invalid h_angle"); return; } h = (s16)*hv;
+                }
+                if (args.size() >= 8) {
+                    const auto vv = ParseLong(args[7]); if (!vv) { output("Error: invalid v_angle"); return; } v = (s16)*vv;
+                }
+            }
+
+            const cXyz dir = anglesToDir(h, v);
+            const cXyz endCenter = cXyz(targetPos.x + dir.x * kCamTargetDist,
+                                        targetPos.y + dir.y * kCamTargetDist,
+                                        targetPos.z + dir.z * kCamTargetDist);
+
+            s_cameraFly.active      = true;
+            s_cameraFly.startEye    = cam->iEye();
+            s_cameraFly.startCenter = cam->iCenter();
+            s_cameraFly.endEye      = targetPos;
+            s_cameraFly.endCenter   = endCenter;
+            s_cameraFly.duration    = flyTime;
+            s_cameraFly.elapsed     = 0.0f;
+            output(fmt::format(FMT_STRING("Camera flying to ({:.2f}, {:.2f}, {:.2f}) over {:.1f}s"),
+                targetPos.x, targetPos.y, targetPos.z, flyTime));
+            return;
+        }
+
+        output("Usage: camera detach | attach | tp ... | fly ... | pos");
+        return;
+    }
+
+    if (cmd == "echo") {
+        if (args.size() >= 2 && args[1] == "off") {
+            state.echoEnabled = false;
+            output("Echo disabled");
+        } else if (args.size() >= 2 && args[1] == "on") {
+            state.echoEnabled = true;
+            output("Echo enabled");
+        } else {
+            output(state.echoEnabled ? "Echo: on" : "Echo: off");
+        }
+        return;
+    }
+
     if (cmd == "transform") {
         auto* player = requirePlayer();
         if (player == nullptr) { return; }
         player->procCoMetamorphoseInit();
         output("Transforming");
+        return;
+    }
+
+    if (cmd == "angle") {
+        auto* player = requirePlayer();
+        if (player == nullptr) { return; }
+        if (args.size() >= 2) {
+            const auto a = ParseLong(args[1]);
+            if (!a) { output("Error: invalid angle"); return; }
+            player->shape_angle.y = (s16)*a;
+            output(fmt::format(FMT_STRING("Angle set to {}"), (int)(s16)*a));
+        } else {
+            output(fmt::format(FMT_STRING("Angle: {}"), (int)player->shape_angle.y));
+        }
         return;
     }
 
@@ -589,8 +842,17 @@ void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutp
     if (cmd == "help") {
         output("@<ref>  =  @<procId> | @found | @link");
         output("");
+        output("angle [value]                               Get or set Link's facing angle");
+        output("camera detach | attach                      Detach or reattach camera");
+        output("camera pos                                  Print camera position and angles");
+        output("camera tp <x> <y> <z> [h] [v]               Teleport camera (h/v are s16 angles)");
+        output("camera tp @<ref>                            Teleport camera to actor");
+        output("camera fly <t> <x> <y> <z> [h] [v]          Fly camera over t seconds (h/v are s16 angles)");
+        output("camera fly <t> @<ref>                       Fly camera to actor");
         output("ebf [0-255]                                 Get or set cDmr_SkipInfo");
+        output("echo on | off                               Enable or disable command echo");
         output("find <id|name> [n=1]                        Store nth actor as @found");
+        output("freeze [@<ref>]                             Freeze globally, or freeze actor");
         output("heal [amount]                               Heal to max, or by relative amount");
         output("kill                                        Set Link health to 0");
         output("kill @<ref>                                 Delete proc");
@@ -607,6 +869,7 @@ void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutp
         output("tp @<ref> <x> <y> <z> [angle]               Move actor to coords");
         output("tp @<ref> @<ref>                            Move actor to actor");
         output("transform                                   Force transform");
+        output("unfreeze [@<ref>]                           Unfreeze globally, or unfreeze actor");
         output("warp <stage> <point> <room> [layer]         Warp to stage");
         return;
     }
