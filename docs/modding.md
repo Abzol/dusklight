@@ -734,7 +734,7 @@ bool onNewSaveSelect(dFile_select_c *fileSelect) {
                 svc_ui->window_close(ctx, *static_cast<UiWindowHandle*>(userdata));
             };
             desc.user_data = &windowHandle;
-            svc_ui->pane_add_control(mod_ctx, leftPane, &desc, &windowHandle);
+            svc_ui->pane_add_control(mod_ctx, leftPane, &desc, nullptr);
             return MOD_OK;
         };
 

@@ -422,13 +422,6 @@ void dScnName_c::changeGameScene() {
         dComIfGs_setRestartRoomParam(0);
 
 #if TARGET_PC
-        if (dusk::getSettings().game.hideTvSettingsScreen) {
-            const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
-            if (gamemode) {
-                gamemode->invokeOnSaveLoadedFunction();
-            }
-        }
-
         toggleAutoSave(true);
 #endif
     }

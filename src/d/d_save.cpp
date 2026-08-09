@@ -1537,13 +1537,6 @@ void dSv_save_c::init() {
 
     mEvent.init();
     mMiniGame.init();
-    
-#ifdef TARGET_PC
-    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
-    if (gamemode) {
-        gamemode->invokeOnNewSaveFunction();
-    }
-#endif
 }
 
 dSv_memory2_c* dSv_save_c::getSave2(int i_stage2No) {

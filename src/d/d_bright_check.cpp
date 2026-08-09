@@ -186,13 +186,6 @@ void dBrightCheck_c::modeMove() {
     if (mDoCPd_c::getTrigA(PAD_1) || mDoCPd_c::getTrigStart(PAD_1)) {
         mDoAud_seStart(Z2SE_ENTER_GAME, NULL, 0, 0);
 #ifdef TARGET_PC
-        if (!dusk::getSettings().game.hideTvSettingsScreen) {
-            const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
-            if (gamemode) {
-                gamemode->invokeOnSaveLoadedFunction();
-            }
-        }
-
         toggleAutoSave(true);
 #endif
         mCompleteCheck = true;

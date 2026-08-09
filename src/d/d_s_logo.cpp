@@ -27,6 +27,7 @@
 #include "dusk/logging.h"
 #include "dusk/main.h"
 #include "dusk/mods/svc/save.hpp"
+#include "dusk/gamemode.hpp"
 #include "dusk/version.hpp"
 #include "m_Do/m_Do_MemCard.h"
 #endif
@@ -785,6 +786,10 @@ void dScnLogo_c::nextSceneChange() {
                 if (status == 1) {
                     dusk::mods::svc::save_slot_loaded(
                         saveSlot, buf + saveSlot * SAVEDATA_SIZE);
+                    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+                    if (gamemode) {
+                        gamemode->invokeOnSaveLoadedFunction();
+                    }
                 }
 
                 dComIfGs_gameStart();

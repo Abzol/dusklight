@@ -7,8 +7,6 @@
 #define GAMEMODE_SERVICE_MAJOR 1u
 #define GAMEMODE_SERVICE_MINOR 0u
 
-struct dFile_select_c;
-
 typedef struct {
     const char* gamemodeId;
     const char* fullName;
@@ -18,7 +16,7 @@ typedef struct {
     void (*onPlayFunction)();
     void (*onSaveLoadedFunction)();
     void (*onNewSaveFunction)();
-    bool (*onNewSaveSelectFunction)(dFile_select_c* fileSelect); // Should return true when any custom options flows are finished
+    bool (*onNewSaveSelectFunction)(struct dFile_select_c* fileSelect); // Should return true when any custom options flows are finished
     void (*onGameResetFunction)();
     void (*onTickFunction)();
 } GamemodeDesc;

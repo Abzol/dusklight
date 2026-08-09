@@ -1416,6 +1416,11 @@ void dFile_select_c::menuSelectStart() {
         dComIfGs_setDataNum(mSelectNum);
 #if TARGET_PC
         dusk::mods::svc::save_slot_loaded(mSelectNum, &mSaveData[mSelectNum]);
+
+        const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+        if (gamemode) {
+            gamemode->invokeOnSaveLoadedFunction();
+        }
 #endif
     } else if (mSelectMenuNum == 0) {
         mSelIcon->setAlphaRate(0.0f);
@@ -1769,6 +1774,11 @@ void dFile_select_c::nameInput2() {
         mIsSelectEnd = true;
 #if TARGET_PC
         dusk::mods::svc::save_slot_new(mSelectNum);
+        const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+        if (gamemode) {
+            gamemode->invokeOnNewSaveFunction();
+            gamemode->invokeOnSaveLoadedFunction();
+        }
 #endif
         mDataSelProc = DATASELPROC_NEXT_MODE_WAIT;
     }
