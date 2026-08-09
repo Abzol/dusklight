@@ -65,6 +65,7 @@ public:
         uncover_top_document();
     }
 
+    bool pending_close() const { return mPendingClose; }
     bool closed() const { return mClosed; }
 
     bool handle_nav_event(Rml::Event& event);
