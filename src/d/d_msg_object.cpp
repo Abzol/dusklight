@@ -26,12 +26,13 @@
 #include <cstring>
 
 #include "JSystem/JKernel/JKRExpHeap.h"
-#include "dusk/version.hpp"
 #include "m_Do/m_Do_controller_pad.h"
 #include "m_Do/m_Do_lib.h"
 
 #if TARGET_PC
+#include "dusk/menu_pointer.h"
 #include "dusk/settings.h"
+#include "dusk/version.hpp"
 #include <vector>
 #include <array>
 #include <algorithm>
@@ -313,6 +314,13 @@ dMsgObject_HIO_c::dMsgObject_HIO_c() {
 }
 
 int dMsgObject_c::_create(msg_class* param_1) {
+#if TARGET_PC
+    if (dusk::version::isRegionJpn())
+        g_MsgObject_HIO_c.mBoxTalkScaleX = 1.1f;
+    else
+        g_MsgObject_HIO_c.mBoxTalkScaleX = 1.2f;
+#endif
+
     field_0x124 = NULL;
     field_0x100 = param_1;
     field_0x16c = -1;
@@ -424,20 +432,9 @@ static void dummyStrings() {
     DEAD_STRING("");
 }
 
-dMsgObject_HIO_c g_MsgObject_HIO_c;
+DUSK_GAME_DATA dMsgObject_HIO_c g_MsgObject_HIO_c;
 
 int dMsgObject_c::_execute() {
-// TODO: enabling wii message overrides fixes direction text, but gives wrong item control text
-/*#if TARGET_PC
-    if (dusk::getSettings().game.enableMirrorMode) {
-        // enable wii message index override
-        g_MsgObject_HIO_c.mMessageDisplay = 1;
-    } else if (!dusk::getSettings().game.enableMirrorMode && g_MsgObject_HIO_c.mMessageDisplay == 1) {
-        g_MsgObject_HIO_c.mMessageDisplay = 0;
-    }
-#endif*/
-
-
     field_0x4c7 = 0;
     if (mpTalkHeap != NULL) {
         field_0x148 = mDoExt_setCurrentHeap(mpTalkHeap);
@@ -654,8 +651,21 @@ static const MirrorMsgOverride mirrorMsgOverrides[] = {
     {0x17e2, 0x3ef2},
     {0x1dae, 0x44be},
     {0x14ca, 0x3bda},
-    {0x470, 0x493}, 
+    {0x470, 0x493},
     {0x473, 0x492},
+    {0x1f41, 0x4651},
+    {0x1f42, 0x4652},
+    {0x0847, 0x0870},
+    {0x0d5c, 0x0d65},
+    {0x0a97, 0x0a98},
+    {0x0327, 0x12ba},
+    {0x0328, 0x12bb},
+    {0x1534, 0x3c44},
+    {0x1536, 0x3c46},
+    {0x1557, 0x3c67},
+    {0x1b88, 0x4298},
+    {0x14c8, 0x3bd8},
+    {0x151b, 0x3c2b},
 };
 
 static u32 getMirrorMsgOverride(u32 msgId) {
@@ -1123,7 +1133,20 @@ void dMsgObject_c::selectProc() {
             dComIfGp_setAStatusForce(0x2a, 0);
         }
     }
-    if (mDoCPd_c::getTrigA(0)) {
+#if TARGET_PC
+    jmessage_tReference* pRef = (jmessage_tReference*)mpRenProc->getReference();
+    u8 pointerChoice = 0xFF;
+    bool pointerConfirm = dusk::menu_pointer::consume_dialog_click(pointerChoice) &&
+                          pointerChoice < pRef->getSelectNum();
+    if (pointerConfirm) {
+        pRef->setSelectPos(pointerChoice);
+    }
+#endif
+    if (mDoCPd_c::getTrigA(0)
+#if TARGET_PC
+        || pointerConfirm
+#endif
+    ) {
         if (getSelectCursorPosLocal() != 0xff) {
             field_0x1a3 = 1;
         }
@@ -1145,7 +1168,9 @@ void dMsgObject_c::selectProc() {
         }
         field_0x1a3 = 2;
     }
+#ifndef TARGET_PC
     jmessage_tReference* pRef = (jmessage_tReference*)mpRenProc->getReference();
+#endif
     if (getStatusLocal() == 8) {
         if (isMidonaMessage() && field_0x1a3 != 0) {
             if (field_0x1a3 == 2 && getSelectCancelPos() == 3) {

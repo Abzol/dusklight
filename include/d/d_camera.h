@@ -1037,7 +1037,7 @@ public:
     bool test1Camera(s32);
     bool test2Camera(s32);
     #if TARGET_PC
-    static bool canUseFreeCam();
+    static bool isAimActive();
     bool freeCamera();
     bool executeDebugFlyCam();
     void deactivateDebugFlyCam();
@@ -1169,7 +1169,7 @@ public:
         return mCamSetup.Far();
     }
 
-    static engine_fn engine_tbl[];
+    static DUSK_GAME_DATA engine_fn engine_tbl[];
 
     /* 0x000 */ camera_class* field_0x0;
 #if PARTIAL_DEBUG || DEBUG // Ensure struct layout consistent in all TUs.

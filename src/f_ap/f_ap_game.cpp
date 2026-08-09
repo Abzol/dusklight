@@ -18,6 +18,7 @@
 #include "dusk/frame_interpolation.h"
 #include "dusk/livesplit.h"
 #include "dusk/logging.h"
+#include "dusk/mod_loader.hpp"
 #include "f_op/f_op_camera_mng.h"
 #include "f_op/f_op_draw_tag.h"
 #include "f_op/f_op_overlap_mng.h"
@@ -29,6 +30,7 @@
 #include "tracy/Tracy.hpp"
 #include <dusk/gamepad_color.h>
 #include <dusk/autosave.h>
+#include "dusk/menu_pointer.h"
 #endif
 
 fapGm_HIO_c::fapGm_HIO_c() {
@@ -740,9 +742,10 @@ static void fapGm_AfterRecord() {
     fapGm_After();
 }
 
-BOOL isRecording = false;
+DUSK_GAME_DATA BOOL isRecording = false;
 
 static void duskExecute() {
+    dusk::menu_pointer::begin_game_frame();
     dusk::input::handleGamepadColor();
     updateAutoSave();
 
@@ -797,6 +800,8 @@ static void duskExecute() {
     if (dusk::getSettings().game.infiniteOxygen) {
         dComIfGp_setOxygen(dComIfGp_getMaxOxygen());
     }
+
+    dusk::mods::ModLoader::instance().tick();
 }
 #endif
 
@@ -826,10 +831,11 @@ void fapGm_Execute() {
 #ifdef TARGET_PC
     dusk::speedrun::onGameFrame();
     dusk::AchievementSystem::get().tick();
+    dusk::menu_pointer::end_game_frame();
 #endif
 }
 
-fapGm_HIO_c g_HIO;
+DUSK_GAME_DATA fapGm_HIO_c g_HIO;
 
 void fapGm_Create() {
     // unused, unknown purpose

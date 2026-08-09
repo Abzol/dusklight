@@ -243,11 +243,7 @@ int rumble_raw_to_percent(u16 raw) {
 
 }  // namespace
 
-ControllerConfigWindow::ControllerConfigWindow(bool prelaunch) {
-    if (prelaunch) {
-        mSuppressNavFallback = true;
-    }
-
+ControllerConfigWindow::ControllerConfigWindow() {
     listen(
         Rml::EventId::Keydown,
         [this](Rml::Event& event) {
@@ -278,7 +274,7 @@ ControllerConfigWindow::ControllerConfigWindow(bool prelaunch) {
 void ControllerConfigWindow::hide(bool close) {
     stop_rumble_test();
     cancel_pending_binding();
-    config::Save();
+    config::save();
     Window::hide(close);
 }
 
@@ -403,7 +399,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                 PADClearPort(port);
                 PADSetKeyboardActive(static_cast<u32>(port), FALSE);
                 PADSerializeMappings();
-                ClearAllActionBindings(port);
+                config::ClearAllActionBindings(port);
                 refresh_controller_page();
             });
 
@@ -417,7 +413,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                 PADClearPort(port);
                 PADSetKeyboardActive(static_cast<u32>(port), TRUE);
                 PADSerializeMappings();
-                ClearAllActionBindings(port);
+                config::ClearAllActionBindings(port);
             });
 
         const u32 controllerCount = PADCount();
@@ -439,7 +435,7 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
                     PADSetKeyboardActive(static_cast<u32>(port), FALSE);
                     PADSetPortForIndex(i, port);
                     PADSerializeMappings();
-                    ClearAllActionBindings(port);
+                    config::ClearAllActionBindings(port);
                 });
         }
         break;
@@ -861,6 +857,20 @@ void ControllerConfigWindow::render_page(Pane& pane, int port, Page page) {
         break;
     }
     case Page::Rumble: {
+        if (PADCanForceDeviceRumble(static_cast<u32>(port))) {
+            pane.add_child<BoolButton>(BoolButton::Props{
+                .key = "Use Device Haptics",
+                .getValue = [port] { return PADGetForceDeviceRumble(static_cast<u32>(port)); },
+                .setValue =
+                    [port](bool value) {
+                        PADSetForceDeviceRumble(static_cast<u32>(port), value ? TRUE : FALSE);
+                        PADSerializeMappings();
+                    },
+                .isDisabled = [this] { return mRumbleTestActive; },
+            });
+            pane.add_text("Use native device haptics instead of controller rumble. "
+                          "Useful for devices with built-in gamepads.");
+        }
         auto& rumbleTest = pane.add_select_button({
             .key = "Test Rumble",
             .getValue =
@@ -1111,7 +1121,7 @@ void ControllerConfigWindow::poll_pending_binding() {
                 return;
             }
             mPendingActionBinding->setValue(button);
-            config::Save();
+            config::save();
             finish_pending_binding(completedPort);
         }
         return;

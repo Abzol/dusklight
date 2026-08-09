@@ -11,15 +11,16 @@
 #include "d/d_com_inf_game.h"
 
 #if TARGET_PC
+#include <aurora/texture.hpp>
 #include "dusk/dvd_asset.hpp"
 #include "dusk/frame_interpolation.h"
 
 using GameVersion = dusk::version::GameVersion;
 
 // keep the original version of the cape texture const so we don't need to reload the file
-static u8 const * l_Egnd_mantTEX_get()   { alignas(32) static u8 buf[0x4000]; static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x1C00}, {GameVersion::GcnPal, 0x1C00}}, 0x4000), true); return buf; }
-static u8* l_Egnd_mantTEX_U_get() { alignas(32) static u8 buf[0x4000]; static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x5C00}, {GameVersion::GcnPal, 0x5C00}}, 0x4000), true); return buf; }
-static u8* l_Egnd_mantPAL_get()   { alignas(32) static u8 buf[0x60];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x9C00}, {GameVersion::GcnPal, 0x9C00}}, 0x60),   true); return buf; }
+static u8 const * l_Egnd_mantTEX_get()   { alignas(32) static u8 buf[0x4000]; static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x1C00}, {GameVersion::GcnPal, 0x1C00}, {GameVersion::GcnJpn, 0x1C00}}, 0x4000), true); return buf; }
+static u8* l_Egnd_mantTEX_U_get() { alignas(32) static u8 buf[0x4000]; static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x5C00}, {GameVersion::GcnPal, 0x5C00}, {GameVersion::GcnJpn, 0x5C00}}, 0x4000), true); return buf; }
+static u8* l_Egnd_mantPAL_get()   { alignas(32) static u8 buf[0x60];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x9C00}, {GameVersion::GcnPal, 0x9C00}, {GameVersion::GcnJpn, 0x9C00}}, 0x60),   true); return buf; }
 #define l_Egnd_mantTEX   (l_Egnd_mantTEX_get())
 #define l_Egnd_mantTEX_U (l_Egnd_mantTEX_U_get())
 #define l_Egnd_mantPAL   (l_Egnd_mantPAL_get())
@@ -35,11 +36,13 @@ static TGXTexObj undersideTexObj;
 
 // l_pos is unused
 //static f32* l_pos_get()      { alignas(32) static f32 buf[507];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0xA44C}, {GameVersion::GcnPal, 0xA44C}}, sizeof(buf)),   true); return buf; }
-static f32* l_normal_get()   { alignas(32) static f32 buf[3];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x9C60}, {GameVersion::GcnPal, 0x9C60}}, sizeof(buf)),   true); return buf; }
-static f32* l_texCoord_get() { alignas(32) static f32 buf[338];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0xA458}, {GameVersion::GcnPal, 0xA458}}, sizeof(buf)),   true); return buf; }
+static f32* l_normal_get()   { alignas(32) static f32 buf[3];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0x9C60}, {GameVersion::GcnPal, 0x9C60}, {GameVersion::GcnJpn, 0x9C60}}, sizeof(buf)),   true); return buf; }
+static f32* l_texCoord_get() { alignas(32) static f32 buf[338];   static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0xA458}, {GameVersion::GcnPal, 0xA458}, {GameVersion::GcnJpn, 0xA458}}, sizeof(buf)),   true); return buf; }
 //#define l_pos      (l_pos_get())
 #define l_normal   (l_normal_get())
 #define l_texCoord (l_texCoord_get())
+
+static bool l_Egnd_mantTEX_hasReplacement = false;
 #else
 #include "assets/l_Egnd_mantTEX.h"
 
@@ -52,7 +55,7 @@ static f32* l_texCoord_get() { alignas(32) static f32 buf[338];   static bool _ 
 #if TARGET_PC
 using GameVersion = dusk::version::GameVersion;
 
-static u8* l_Egnd_mantDL_get() { alignas(32) static u8 buf[0x3EC]; static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0xA9A0}, {GameVersion::GcnPal, 0xA9A0}}, 0x3EC), true); return buf; }
+static u8* l_Egnd_mantDL_get() { alignas(32) static u8 buf[0x3EC]; static bool _ = (dusk::LoadRelAsset(buf, "/rel/Final/Release/d_a_mant.rel", {{GameVersion::GcnUsa, 0xA9A0}, {GameVersion::GcnPal, 0xA9A0}, {GameVersion::GcnJpn, 0xA9A0}}, 0x3EC), true); return buf; }
 #define l_Egnd_mantDL (l_Egnd_mantDL_get())
 #else
 #include "assets/l_Egnd_mantDL.h"
@@ -223,6 +226,7 @@ void daMant_packet_c::draw() {
         GXInitTexObjCI(
             &undersideTexObj, l_Egnd_mantTEX_U, 0x80, 0x80, GX_TF_C8, GX_CLAMP, GX_CLAMP, 0, 0);
         GXInitTexObjLOD(&undersideTexObj, GX_LINEAR, GX_LINEAR, 0.0, 0.0, 0.0, 0, 0, GX_ANISO_1);
+        l_Egnd_mantTEX_hasReplacement = aurora::texture::has_replacement(&mainTexObj, &tlutObj);
         textureObjsInitialized = true;
     }
 #else
@@ -636,7 +640,11 @@ static int daMant_Execute(mant_class* i_this) {
     iVar8 = 0;
 
     if (i_this->field_0x3967 != 0) {
+#if TARGET_PC
+        mant_cut_type = l_Egnd_mantTEX_hasReplacement ? 1 : i_this->field_0x3967;
+#else
         mant_cut_type = i_this->field_0x3967;
+#endif
 
         if (i_this->field_0x3968 < 15) {
             i_this->field_0x3968++;
@@ -648,9 +656,18 @@ static int daMant_Execute(mant_class* i_this) {
                 iVar8 = 20;
             }
 
-            unaff_r29 = cM_rndF(65536.0f);
-            var_f31 = cM_rndFX(32.0f);
-            var_f30 = cM_rndFX(32.0f);
+#if TARGET_PC
+            if (l_Egnd_mantTEX_hasReplacement) {
+                unaff_r29 = i_this->mMantRng.getF(65536.0f);
+                var_f31 = i_this->mMantRng.getFX(32.0f);
+                var_f30 = i_this->mMantRng.getFX(32.0f);
+            } else
+#endif
+            {
+                unaff_r29 = cM_rndF(65536.0f);
+                var_f31 = cM_rndFX(32.0f);
+                var_f30 = cM_rndFX(32.0f);
+            }
         }
 
         i_this->field_0x3967 = 0;
@@ -760,6 +777,8 @@ static int daMant_Create(fopAc_ac_c* i_this) {
     if(textureObjsInitialized) {
         GXInitTlutObjData(&tlutObj, l_Egnd_mantPAL); // make sure the cached textures are updated
     }
+
+    m_this->mMantRng.init(66, 16983, 855);
 #endif
 
     lbl_277_bss_0 = 0;

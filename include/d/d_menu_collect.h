@@ -74,6 +74,8 @@ public:
 
     #if TARGET_PC
     void menuCollectWide();
+    bool pointerWait();
+    void pointerActivateCurrent();
     #endif
 
     void _create();
@@ -264,7 +266,7 @@ public:
         mViewOffsetY = i_offset;
     }
 
-    static f32 mViewOffsetY;
+    static DUSK_GAME_DATA f32 mViewOffsetY;
 
 private:
     /* 0x004 */ JKRExpHeap* mpHeap;
