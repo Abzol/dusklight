@@ -1807,9 +1807,9 @@ int daNpcChin_c::_Evt_GameSucceed_CutMain(const int& param_0) {
 #if TARGET_PC
             const char* itemCheckName = nullptr;
             if (itemId1 == dItemNo_ARROW_LV2_e) {
-                itemCheckName = "STAR Prize 1";
+                itemCheckName = "star_reward_1";
             } else if (itemId1 == dItemNo_ARROW_LV3_e) {
-                itemCheckName = "STAR Prize 2";
+                itemCheckName = "star_reward_2";
             }
             if (itemCheckName != nullptr) {
                 itemId1 = dusk::mods::item_check(itemCheckName, itemId1, this);

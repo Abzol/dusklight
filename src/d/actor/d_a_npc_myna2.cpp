@@ -1194,7 +1194,7 @@ int daNpc_myna2_c::ECut_gameGoalSuccess(int i_staffId) {
 #if TARGET_PC
                 const char* itemCheckName = nullptr;
                 if (itemNo == dItemNo_KAKERA_HEART_e) {
-                    itemCheckName = "Plumm Fruit Balloon Minigame";
+                    itemCheckName = "plumm_minigame_reward";
                     itemNo = dusk::mods::item_check(itemCheckName, itemNo, this);
                 }
 #endif

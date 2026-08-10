@@ -1236,9 +1236,9 @@ int daNpc_Len_c::talk(void* param_0) {
                     switch (evt_id) {
                     case 1:
                         if (mItemPartnerId == -1) {
-                            DUSK_ITEM_CHECK("Renados Letter", local_18, this);
+                            DUSK_ITEM_CHECK("renado_letter", local_18, this);
                             mItemPartnerId = fopAcM_createItemForPresentDemo(&current.pos, local_18,
-                                0, -1, -1, 0, 0 DUSK_GIVE_TAG("Renados Letter"));
+                                0, -1, -1, 0, 0 DUSK_GIVE_TAG("renado_letter"));
                         }
                         if (fopAcM_IsExecuting(mItemPartnerId)) {
                             mEvtNo = 1;

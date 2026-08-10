@@ -4021,7 +4021,7 @@ BOOL daNpc_grA_c::talk(void*) {
 #if TARGET_PC
                 const char* itemCheckName = nullptr;
                 if (sp8 == dItemNo_BOMB_IN_BAG_e) {
-                    itemCheckName = "Zoras Domain Underwater Goron";
+                    itemCheckName = "goron_reward:F_SP113";
                     sp8 = dusk::mods::item_check(itemCheckName, sp8, this);
                 }
 #endif

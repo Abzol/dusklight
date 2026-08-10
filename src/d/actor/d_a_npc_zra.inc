@@ -2612,9 +2612,9 @@ BOOL daNpc_zrA_c::ECut_thanksBlast(int i_staffID) {
 #if TARGET_PC
                 const char* itemCheckName = nullptr;
                 if (item_id == dItemNo_BOMB_IN_BAG_e) {
-                    itemCheckName = "Iza Helping Hand";
+                    itemCheckName = "iza_reward_1";
                 } else if (item_id == dItemNo_BOMB_BAG_LV2_e) {
-                    itemCheckName = "Iza Raging Rapids Minigame";
+                    itemCheckName = "iza_reward_2";
                 }
                 if (itemCheckName != nullptr) {
                     item_id = dusk::mods::item_check(itemCheckName, item_id, this);

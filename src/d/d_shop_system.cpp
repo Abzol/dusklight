@@ -908,7 +908,7 @@ int dShopSystem_c::seq_start(fopAc_ac_c* actor, dMsgFlow_c* i_flow) {
 #if TARGET_PC
                         const char* itemCheckName = nullptr;
                         if (itemNo == dItemNo_HALF_MILK_BOTTLE_e) {
-                            itemCheckName = "Ordon Cat Rescue";
+                            itemCheckName = "sera_reward";
                             itemNo = dusk::mods::item_check(itemCheckName, itemNo, actor);
                         }
 #endif

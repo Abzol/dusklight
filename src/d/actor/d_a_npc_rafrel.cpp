@@ -1310,9 +1310,9 @@ bool daNpcRafrel_c::talk(void* param_0) {
                 OS_REPORT("会話終了時 イベントID=%d アイテムNo=%d\n", eventId, itemNo);
 
                 if (eventId == 1) {
-                    DUSK_ITEM_CHECK("Auru Gift To Fyer", itemNo, this);
+                    DUSK_ITEM_CHECK("auru_memo", itemNo, this);
                     field_0xe00 = fopAcM_createItemForPresentDemo(&current.pos, itemNo, 0, -1, -1,
-                        NULL, NULL DUSK_GIVE_TAG("Auru Gift To Fyer"));
+                        NULL, NULL DUSK_GIVE_TAG("auru_memo"));
                     if (field_0xe00 != fpcM_ERROR_PROCESS_ID_e) {
                         s16 eventIdx = dComIfGp_getEventManager().getEventIdx(this, "DEFAULT_GETITEM", 0xFF);
                         dComIfGp_getEvent()->reset(this);
@@ -1564,9 +1564,9 @@ int daNpcRafrel_c::EvCut_Appear(int i_staffId) {
             int itemNo = 0;
             u16 eventId = mFlow.getEventId(&itemNo);
             if (eventId == 1) {
-                DUSK_ITEM_CHECK("Auru Gift To Fyer", itemNo, this);
+                DUSK_ITEM_CHECK("auru_memo", itemNo, this);
                 field_0xe00 = fopAcM_createItemForPresentDemo(
-                    &current.pos, itemNo, 0, -1, -1, NULL, NULL DUSK_GIVE_TAG("Auru Gift To Fyer"));
+                    &current.pos, itemNo, 0, -1, -1, NULL, NULL DUSK_GIVE_TAG("auru_memo"));
                 dComIfGp_event_setItemPartnerId(field_0xe00);
                 field_0xe00 = fpcM_ERROR_PROCESS_ID_e;
             }

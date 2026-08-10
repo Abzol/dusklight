@@ -961,9 +961,9 @@ int daNpc_Pouya_c::cutHaveFavorToAsk(int param_0) {
 #if TARGET_PC
                         const char* itemCheckName = nullptr;
                         if (local_64 == dItemNo_DROP_BOTTLE_e) {
-                            itemCheckName = "Jovani 20 Poe Soul Reward";
+                            itemCheckName = "jovani_reward_1";
                         } else if (local_64 == dItemNo_SILVER_RUPEE_e) {
-                            itemCheckName = "Jovani 60 Poe Soul Reward";
+                            itemCheckName = "jovani_reward_2";
                         }
                         if (itemCheckName != nullptr) {
                             local_64 = dusk::mods::item_check(itemCheckName, local_64, this);

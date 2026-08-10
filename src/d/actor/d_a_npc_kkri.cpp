@@ -1184,7 +1184,7 @@ int daNpc_Kkri_c::talk(void*) {
 #if TARGET_PC
                             const char* itemCheckName = nullptr;
                             if (item_no == dItemNo_OIL_BOTTLE3_e) {
-                                itemCheckName = "Coro Bottle";
+                                itemCheckName = "coro_bottle";
                                 item_no = dusk::mods::item_check(itemCheckName, item_no, this);
                             }
 #endif
