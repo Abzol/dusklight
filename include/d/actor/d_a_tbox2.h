@@ -84,6 +84,7 @@ private:
     /* 0xAC4 */ int mStaffIdx;
     /* 0xAC8 */ dBgW* mBoxBgW;
 #if TARGET_PC
+    bool mParamsInit;
     u8 mOriginalItemNo;
 #endif
 };

@@ -139,11 +139,14 @@ int daTbox2_c::create1st() {
     mModelType = getModelType();
 
 #if TARGET_PC
-    mOriginalItemNo = getItemNo();
-    int tboxNo = fopAcM_GetParamBit(this, 16, 8);
-    const u8 resolvedItem = dusk::mods::item_check_chest(tboxNo, mOriginalItemNo, this);
-    u32 params = (fopAcM_GetParam(this) & 0xFFFFFF00) | resolvedItem;
-    fopAcM_SetParam(this, params);
+    if (!mParamsInit) {
+        mOriginalItemNo = getItemNo();
+        int tboxNo = fopAcM_GetParamBit(this, 16, 8);
+        const u8 resolvedItem = dusk::mods::item_check_chest(tboxNo, mOriginalItemNo, this);
+        u32 params = (fopAcM_GetParam(this) & 0xFFFFFF00) | resolvedItem;
+        fopAcM_SetParam(this, params);
+        mParamsInit = true;
+    }
 #endif
 
     int phase_state = dComIfG_resLoad(&mPhase, l_arcName);
