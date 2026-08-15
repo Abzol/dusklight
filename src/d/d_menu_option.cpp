@@ -159,7 +159,9 @@ void dMenu_Option_c::_create() {
     
     mpTVButtonText = JKR_NEW CPaneMgr(mpTVScreen, MULTI_CHAR('a_text_n'), 0, NULL);
     JUT_ASSERT(298, mpTVButtonText != NULL);
+    IF_DUSK_BLOCK(dusk::version::getGameVersion() >= dusk::version::GameVersion::WiiJpn)
     mpTVScreen->search(MULTI_CHAR('g_abtn_n'))->hide();
+    IF_DUSK_BLOCK_END
 
     mpScreenIcon = JKR_NEW J2DScreen();
     JUT_ASSERT(325, mpScreenIcon != NULL);
@@ -1710,9 +1712,11 @@ void dMenu_Option_c::screenSet() {
     mpString->getString(0x55C, field_0x270[2], NULL, NULL, NULL, 0);
     for (int i = 0; i < 5; i++) {
 #if TARGET_PC
-        if (dusk::version::isRegionJpn()) {
+        if (dusk::version::isJpnOrLessThanWiiJpn()) {
             field_0x25c[i] = (J2DTextBox*)mpTVScreen->search(tv_btnA[i]);
-            mpTVScreen->search(ftv_btnA[i])->hide();
+            if (dusk::version::getGameVersion() >= dusk::version::GameVersion::WiiJpn) {
+                mpTVScreen->search(ftv_btnA[i])->hide();
+            }
         } else {
             field_0x25c[i] = (J2DTextBox*)mpTVScreen->search(ftv_btnA[i]);
             mpTVScreen->search(tv_btnA[i])->hide();
