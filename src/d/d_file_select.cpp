@@ -1311,7 +1311,7 @@ void dFile_select_c::selectDataOpenMove() {
 void dFile_select_c::selectDataNameMove() {
     bool isHeaderTxtChange = headerTxtChangeAnm();
     bool isFileRecScale = fileRecScaleAnm2();
-    bool isNameMove = nameMoveAnm();
+    IF_NOT_DUSK(bool isNameMove = nameMoveAnm();)
     bool isModoruTxtDisp = modoruTxtDispAnm();
 
 #ifdef TARGET_PC
@@ -1331,6 +1331,8 @@ void dFile_select_c::selectDataNameMove() {
     }
     mGamemodeSaveStartBuildUi = true;
 #endif
+
+    IF_DUSK(bool isNameMove = nameMoveAnm();)
 
     if (isHeaderTxtChange == true && isFileRecScale == true && isNameMove == true &&
         isModoruTxtDisp == true)
