@@ -22,15 +22,16 @@ static int fopOvlpReq_phase_Done(overlap_request_class* i_overlapReq) {
         i_overlapReq->field_0x8 = 0;
         i_overlapReq->field_0xc = 0;
 
-        #if TARGET_PC
+#if TARGET_PC
         if (dusk::speedrun::isActive()) {
             if (dusk::speedrun::g_speedrunInfo.m_isRunStarted) {
                 dusk::speedrun::g_speedrunInfo.m_isPauseIGT = false;
-                dusk::speedrun::g_speedrunInfo.m_totalLoadTime += OSGetTime() - dusk::speedrun::g_speedrunInfo.m_loadStartTimestamp;
+                dusk::speedrun::g_speedrunInfo.m_totalLoadTime +=
+                    OSGetTime() - dusk::speedrun::g_speedrunInfo.m_loadStartTimestamp;
                 dusk::speedrun::g_speedrunInfo.m_loadStartTimestamp = OSGetTime();
             }
         }
-        #endif
+#endif
         return cPhs_NEXT_e;
     }
 

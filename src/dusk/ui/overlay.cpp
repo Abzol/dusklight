@@ -203,10 +203,19 @@ void remove_element(Rml::Element*& elem) noexcept {
 
 }  // namespace
 
-static std::string FormatTime(OSTime ticks) {
-    OSCalendarTime t;
-    OSTicksToCalendarTime(ticks, &t);
-    return fmt::format("{0:02}:{1:02}:{2:02}.{3:03}", t.hour, t.min, t.sec, t.msec);
+static std::string FormatElapsedTime(OSTime ticksElapsed) {
+    using namespace std::chrono;
+
+    milliseconds ms{OSTicksToMilliseconds(ticksElapsed)};
+
+    const hours hr = duration_cast<hours>(ms);
+    ms -= hr;
+    const minutes min = duration_cast<minutes>(ms);
+    ms -= min;
+    const seconds sec = duration_cast<seconds>(ms);
+    ms -= sec;
+
+    return fmt::format("{0:02}:{1:02}:{2:02}.{3:03}", hr.count(), min.count(), sec.count(), ms.count());
 }
 
 Overlay::Overlay() : Document(kDocumentSource, true, DocumentScope::Overlay) {
@@ -316,34 +325,34 @@ void Overlay::update() {
             if (mDoCPd_c::getHoldL(PAD_1) && mDoCPd_c::getHoldR(PAD_1) &&
                 mDoCPd_c::getHoldA(PAD_1) && mDoCPd_c::getTrigY(PAD_1))
             {
-                if (dusk::speedrun::g_speedrunInfo.m_isRunStarted) {
-                    dusk::speedrun::g_speedrunInfo.m_endTimestamp = OSGetTime() - dusk::speedrun::g_speedrunInfo.m_startTimestamp;
-                    dusk::speedrun::g_speedrunInfo.m_isRunStarted = false;
+                if (speedrun::g_speedrunInfo.m_isRunStarted) {
+                    speedrun::g_speedrunInfo.stopRun();
                 }
             }
 
-            OSTime elapsedTime = 0;
-            if (dusk::speedrun::g_speedrunInfo.m_isRunStarted) {
-                elapsedTime = OSGetTime() - dusk::speedrun::g_speedrunInfo.m_startTimestamp;
-            } else if (dusk::speedrun::g_speedrunInfo.m_endTimestamp != 0) {
-                elapsedTime = dusk::speedrun::g_speedrunInfo.m_endTimestamp;
+            OSTime rtaElapsedTime = 0;
+            if (speedrun::g_speedrunInfo.m_isRunStarted) {
+                rtaElapsedTime = OSGetNativeTime() - speedrun::g_speedrunInfo.m_rtaStartTimestamp;
+            } else if (speedrun::g_speedrunInfo.m_rtaTimer != 0) {
+                rtaElapsedTime = speedrun::g_speedrunInfo.m_rtaTimer;
             }
 
-            if (!dusk::speedrun::g_speedrunInfo.m_isPauseIGT) {
-                dusk::speedrun::g_speedrunInfo.m_igtTimer = elapsedTime - dusk::speedrun::g_speedrunInfo.m_totalLoadTime;
+            if (speedrun::g_speedrunInfo.m_isRunStarted && !speedrun::g_speedrunInfo.m_isRunStarted) {
+                speedrun::g_speedrunInfo.m_igtTimer = OSGetTime() - speedrun::g_speedrunInfo.m_igtStartTimestamp -
+                                            speedrun::g_speedrunInfo.m_totalLoadTime;
             }
 
             mSpeedrunTimer->SetAttribute("open", "");
 
             if (getSettings().game.showSpeedrunRTATimer) {
                 mSpeedrunRta->SetAttribute("open", "");
-                mSpeedrunRta->SetInnerRML(escape(fmt::format("RTA  {}", FormatTime(elapsedTime))));
+                mSpeedrunRta->SetInnerRML(escape(fmt::format("RTA  {}", FormatElapsedTime(rtaElapsedTime))));
             } else {
                 mSpeedrunRta->RemoveAttribute("open");
             }
 
             mSpeedrunIgt->SetInnerRML(
-                escape(fmt::format("IGT  {}", FormatTime(dusk::speedrun::g_speedrunInfo.m_igtTimer))));
+                escape(fmt::format("IGT  {}", FormatElapsedTime(speedrun::g_speedrunInfo.m_igtTimer))));
         } else {
             mSpeedrunTimer->RemoveAttribute("open");
         }
