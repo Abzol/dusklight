@@ -2,11 +2,13 @@
 #include <aurora/aurora.h>
 #include "dusk/gamemode.hpp"
 
-#define DUSK_SPEEDRUN_GAMEMODE_ID "vanilla_speedrun"
 
 namespace dusk::speedrun {
 
+constexpr const char* kSpeedrunGamemodeId = "vanilla_speedrun";
+
 struct SpeedrunInfo {
+
     void startRun() {
         m_isRunStarted = true;
         m_rtaStartTimestamp = OSGetNativeTime();
@@ -51,7 +53,7 @@ void resetForSpeedrunMode();
 void restoreFromSpeedrunMode();
 
 inline bool isActive() {
-    return dusk::gamemode::getGamemodeManager().isCurrentGamemode(DUSK_SPEEDRUN_GAMEMODE_ID);
+    return dusk::gamemode::getGamemodeManager().isCurrentGamemode(kSpeedrunGamemodeId);
 }
 
 }  // namespace dusk

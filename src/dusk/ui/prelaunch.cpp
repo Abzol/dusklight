@@ -769,7 +769,7 @@ static std::string get_playbutton_text() {
     const dusk::gamemode::Gamemode* currentGameMode =
         dusk::gamemode::getGamemodeManager().getCurrentGamemode();
     if (currentGameMode != nullptr) {
-        return currentGameMode->getId() == "vanilla" ? "Play" :
+        return currentGameMode->getId() == dusk::gamemode::kVanillaGamemodeId ? "Play" :
                                                        "Play " + currentGameMode->getFullName();
     }
     return "Play";
@@ -880,14 +880,14 @@ void Prelaunch::build_menu_buttons() {
                 gamemodeActions.push_back(dusk::ui::ModalAction{
                     .label = "Vanilla", .onPressed = [this](dusk::ui::Modal& modal) {
                         mDoAud_seStartMenu(kSoundClick);
-                        dusk::gamemode::getGamemodeManager().setCurrentGamemode("vanilla");
+                        dusk::gamemode::getGamemodeManager().setCurrentGamemode(dusk::gamemode::kVanillaGamemodeId);
                         modal.pop();
                         update();
                     }});
                 for (const auto& [id, gamemode] :
                     dusk::gamemode::getGamemodeManager().getRegisteredGamemodes())
                 {
-                    if (id == "vanilla") {
+                    if (id == dusk::gamemode::kVanillaGamemodeId) {
                         // Force vanilla to the top
                         continue;
                     }

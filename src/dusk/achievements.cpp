@@ -20,6 +20,8 @@
 #include "f_op/f_op_actor_mng.h"
 #include "f_pc/f_pc_name.h"
 #include "dusk/logging.h"
+#include "dusk/gamemode.hpp"
+#include "dusk/speedrun.h"
 
 #include <filesystem>
 #include <algorithm>
@@ -1302,6 +1304,12 @@ void AchievementSystem::processEntry(Entry& e) {
 }
 
 void AchievementSystem::tick() {
+    // Until we implement an AchievementService, achievements will be unavailible in custom gamemodes
+    if (dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::gamemode::kVanillaGamemodeId) == false
+        && dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::speedrun::kSpeedrunGamemodeId) == false) {
+        m_signals.clear();
+        return;
+    }
     if (!m_loaded) {
         load();
     }

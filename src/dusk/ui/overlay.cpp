@@ -337,7 +337,7 @@ void Overlay::update() {
                 rtaElapsedTime = speedrun::g_speedrunInfo.m_rtaTimer;
             }
 
-            if (speedrun::g_speedrunInfo.m_isRunStarted && !speedrun::g_speedrunInfo.m_isRunStarted) {
+            if (speedrun::g_speedrunInfo.m_isRunStarted && !speedrun::g_speedrunInfo.m_isPauseIGT) {
                 speedrun::g_speedrunInfo.m_igtTimer = OSGetTime() - speedrun::g_speedrunInfo.m_igtStartTimestamp -
                                             speedrun::g_speedrunInfo.m_totalLoadTime;
             }

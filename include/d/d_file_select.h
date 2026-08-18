@@ -426,7 +426,6 @@ public:
         nameMoveAnmInitSet(0xd29, 0xd1f);
         modoruTxtDispAnmInit(0);
         mDataSelProc = DATASELPROC_NAME_TO_DATA_SELECT_MOVE;
-        mGamemodeSaveStartBuildUi = true;
     }
     #endif
     void _draw();
@@ -742,6 +741,8 @@ public:
 #ifdef TARGET_PC
     dDlst_FileSelFade_c mFadeDlst;
     bool mGamemodeSaveStartBuildUi = true;
+    bool mGamemodeProceedToNameSelect = false;
+    bool mGamemodeReturnToFileSelect = false;
 #endif
 
     #if PLATFORM_WII || PLATFORM_SHIELD

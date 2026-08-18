@@ -12,16 +12,15 @@ GamemodeManager g_GamemodeManager;
 aurora::Module DuskGamemodeLog("dusk::gamemode");
 
 GamemodeManager::GamemodeManager() {
-    registerGamemode(Gamemode("vanilla","Vanilla","gczelda2"));
-    
-    mCurrentGamemodeId = "vanilla";
+    registerGamemode(Gamemode(kVanillaGamemodeId,"Vanilla","gczelda2"));
+    mCurrentGamemodeId = kVanillaGamemodeId;
 }
 
 void GamemodeManager::setGamemodeToPrevious() {
     // Gets the value from the settings of the last played gamemode id and sets that to the current gamemode (if registered)
     GamemodeId id = dusk::getSettings().game.lastSelectedGamemodeId;
     if (mRegisteredGamemodes.find(id) == mRegisteredGamemodes.end()) {
-        setCurrentGamemode("vanilla");
+        setCurrentGamemode(kVanillaGamemodeId);
         return;
     }
     setCurrentGamemode(id);
@@ -60,7 +59,7 @@ void GamemodeManager::unregisterGamemode(const GamemodeId& gamemodeId) {
         // to reset the game back to title as vanilla;
         ui::prelaunch_state().showPrelaunchOnReset = true;
         JUTGamePad::C3ButtonReset::sResetSwitchPushing = true;
-        setCurrentGamemode("vanilla");
+        setCurrentGamemode(kVanillaGamemodeId);
     }
     mRegisteredGamemodes.erase(it);
     dusk::ui::Prelaunch::rebuild_menu_buttons();

@@ -63,7 +63,11 @@ MenuBar::MenuBar()
         mTabBar->add_tab("Editor", [this] { push(std::make_unique<EditorWindow>()); });
     }
 
-    mTabBar->add_tab("Achievements", [this] { push(std::make_unique<AchievementsWindow>()); });
+    // Only allow us to access achievements if we are playing on a gamemode that uses them
+    if (dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::gamemode::kVanillaGamemodeId)
+        || dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::speedrun::kSpeedrunGamemodeId)) {
+        mTabBar->add_tab("Achievements", [this] { push(std::make_unique<AchievementsWindow>()); });
+    }
     mTabBar->add_tab("Mods", [this] { push(std::make_unique<ModsWindow>()); });
     for (auto& tab : mods::svc::ui_mod_menu_tabs()) {
         mTabBar->add_tab(tab.label, std::move(tab.onSelected));

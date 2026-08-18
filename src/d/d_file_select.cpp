@@ -1318,18 +1318,24 @@ void dFile_select_c::selectDataNameMove() {
     const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
     if (gamemode) {
         if (isHeaderTxtChange == true && isFileRecScale == true && isModoruTxtDisp == true) {    
-            bool gamemodeFlowClosed = gamemode->invokeOnNewSaveSelectFunction(this);
-            if (mGamemodeSaveStartBuildUi == true) {
+            if (mGamemodeSaveStartBuildUi) {
+                gamemode->invokeOnNewSaveSelectFunction(&mGamemodeProceedToNameSelect, &mGamemodeReturnToFileSelect);
                 mGamemodeSaveStartBuildUi = false;
             }
-            if (!gamemodeFlowClosed) {
+            if (mGamemodeReturnToFileSelect) {
+                backToDataSelectMove();
+                mGamemodeSaveStartBuildUi = true;
+                mGamemodeProceedToNameSelect = false;
+                mGamemodeReturnToFileSelect = false;
+                return;
+            }
+            if (!mGamemodeProceedToNameSelect) {
                 return;
             }
         }else {
             return;
         }
     }
-    mGamemodeSaveStartBuildUi = true;
 #endif
 
     IF_DUSK(bool isNameMove = nameMoveAnm();)
@@ -1337,6 +1343,11 @@ void dFile_select_c::selectDataNameMove() {
     if (isHeaderTxtChange == true && isFileRecScale == true && isNameMove == true &&
         isModoruTxtDisp == true)
     {
+#ifdef TARGET_PC
+        mGamemodeSaveStartBuildUi = true;
+        mGamemodeProceedToNameSelect = false;
+        mGamemodeReturnToFileSelect = false;
+#endif
         mDataSelProc = DATASELPROC_NAME_INPUT_WAIT;
     }
 }

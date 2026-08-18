@@ -6,6 +6,8 @@
 namespace dusk::gamemode {
 using GamemodeId = std::string;
 
+constexpr const char* kVanillaGamemodeId = "vanilla";
+
 // This class holds the definition for the gamemode and various function pointers to call
 class Gamemode {
 public:
@@ -52,11 +54,12 @@ public:
         }
     }
     
-    bool invokeOnNewSaveSelectFunction(dFile_select_c* fileSelect) const {
+    void invokeOnNewSaveSelectFunction(bool* out_proceedToNameSelect, bool* out_returnToFileSelect) const {
         if (mOnNewSaveSelectFunction) {
-            return mOnNewSaveSelectFunction(fileSelect);
+            mOnNewSaveSelectFunction(out_proceedToNameSelect, out_returnToFileSelect);
+        }else {
+            *out_proceedToNameSelect = true;
         }
-        return true;
     }
 
     void invokeOnGameResetFunction() const {
@@ -76,7 +79,7 @@ public:
     std::function<void()> mOnPlayFunction;
     std::function<void()> mOnSaveLoadedFunction;
     std::function<void()> mOnNewSaveFunction;
-    std::function<bool(dFile_select_c* fileSelect)> mOnNewSaveSelectFunction;
+    std::function<void(bool* out_proceedToNameSelect, bool* out_returnToFileSelect)> mOnNewSaveSelectFunction;
     std::function<void()> mOnGameResetFunction;
     std::function<void()> mOnTickFunction;
 };
@@ -89,7 +92,7 @@ public:
 
     const Gamemode* getCurrentGamemode() const {
         const auto& it = mRegisteredGamemodes.find(mCurrentGamemodeId);
-        return it != mRegisteredGamemodes.end() ? &it->second : &mRegisteredGamemodes.at("vanilla");
+        return it != mRegisteredGamemodes.end() ? &it->second : &mRegisteredGamemodes.at(kVanillaGamemodeId);
     }
     bool isCurrentGamemode(const GamemodeId& id) const {
         const Gamemode* gamemode = getCurrentGamemode();

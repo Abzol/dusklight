@@ -1,5 +1,6 @@
 #include "dusk/settings.h"
 #include "dusk/config.hpp"
+#include "dusk/gamemode.hpp"
 #include <aurora/aurora.h>
 
 namespace dusk {
@@ -157,7 +158,7 @@ UserSettings g_userSettings = {
         .removeQuestMapMarkers {"game.removeQuestMapMarkers", false},
         .showInputViewer {"game.showInputViewer", false},
         .showInputViewerGyro {"game.showInputViewerGyro", false},
-        .lastSelectedGamemodeId {"game.lastSelectedGamemodeId", "vanilla"}
+        .lastSelectedGamemodeId {"game.lastSelectedGamemodeId", gamemode::kVanillaGamemodeId}
     },
 
     .backend = {

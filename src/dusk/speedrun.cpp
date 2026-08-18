@@ -22,7 +22,7 @@ static void onSpeedrunModeDeactive() {
 }
 
 void registerSpeedrunGamemode() {
-    dusk::gamemode::Gamemode speedrunGamemode(DUSK_SPEEDRUN_GAMEMODE_ID,"Speedrun","gczelda2-speedrun");
+    dusk::gamemode::Gamemode speedrunGamemode(kSpeedrunGamemodeId,"Speedrun","gczelda2-speedrun");
     speedrunGamemode.mOnSaveLoadedFunction = dusk::speedrun::start;
     speedrunGamemode.mOnActivatedFunction = onSpeedrunModeActive;
     speedrunGamemode.mOnDeactivatedFunction = onSpeedrunModeDeactive;
@@ -32,7 +32,7 @@ void registerSpeedrunGamemode() {
 }
 
 void unregisterSpeedrunGamemode() {
-    dusk::gamemode::getGamemodeManager().unregisterGamemode(DUSK_SPEEDRUN_GAMEMODE_ID);
+    dusk::gamemode::getGamemodeManager().unregisterGamemode(kSpeedrunGamemodeId);
 }
 
 void resetForSpeedrunMode() {

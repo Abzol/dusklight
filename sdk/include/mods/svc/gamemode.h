@@ -10,15 +10,17 @@
 typedef struct {
     const char* gamemodeId;
     const char* fullName;
-    const char saveName[32]; // GCI Filenames are limited to 31 characters
-    void (*onActivatedFunction)();
-    void (*onDeactivatedFunction)();
-    void (*onPlayFunction)();
-    void (*onSaveLoadedFunction)();
-    void (*onNewSaveFunction)();
-    bool (*onNewSaveSelectFunction)(struct dFile_select_c* fileSelect); // Should return true when any custom options flows are finished
-    void (*onGameResetFunction)();
-    void (*onTickFunction)();
+    const char saveName[32];        // Should be unique. GCI Filenames are limited to 31 characters
+    void (*onActivatedFunction)();  // Called when the gamemode is selected
+    void (*onDeactivatedFunction)();  // Called when the gamemode is deselected
+    void (*onPlayFunction)();         // Called when play is pressed on the prelaunch menu
+    void (*onSaveLoadedFunction)();   // Called whenever a savefile is loaded
+    void (*onNewSaveFunction)();      // Called when a new save is created
+    void (*onNewSaveSelectFunction)(bool* out_proceedToNameSelect,
+        bool* out_returnToFileSelect);  // Set out_proceedToNameSelect to true once any UI flows are
+                                        // completed
+    void (*onGameResetFunction)();      // Called when the game is reset
+    void (*onTickFunction)();           // Called on every tick
 } GamemodeDesc;
 
 typedef struct GamemodeService {
