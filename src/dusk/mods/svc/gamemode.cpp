@@ -147,7 +147,7 @@ constinit const ServiceModule g_gamemodeModule{
     .majorVersion = GAMEMODE_SERVICE_MAJOR,
     .minorVersion = GAMEMODE_SERVICE_MINOR,
     .service = &s_gamemodeService,
-    .modDetached = gamemode_impl::gamemode_remove_mod,
+    .modDeactivating = gamemode_impl::gamemode_remove_mod,
 };
 
 }  // namespace dusk::mods::svc

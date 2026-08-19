@@ -502,7 +502,7 @@ static void log_build_info() {
     DuskLog.info("Platform: {}", BOREALIS_PLATFORM_NAME);
 }
 
-static void mods_init(const std::string& mods_dir) {
+static void mods_init(const std::filesystem::path& mods_dir) {
     // Mod search directories, highest priority first: user dir (--mods replaces it), then
     // mods/ next to the app, then install-bundled mods inside the app bundle.
     {
