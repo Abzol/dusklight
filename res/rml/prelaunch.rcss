@@ -366,6 +366,34 @@ body.animate-in .intro-item {
     transition: opacity transform 0.3s 0.7s cubic-in-out;
 }
 
+/* Locks the menu element to not go below the disc status element */
+@media (max-height: 900dp) {
+    menu {
+        top: auto;
+        bottom: 150dp;
+        transform: none;
+        gap: 24dp;
+    }
+
+    hero {
+        gap: 2dp;
+        max-height: 220dp;
+    }
+
+    hero img {
+        width: 80%;
+        max-height: 180dp;
+    }
+}
+
+@media (max-height: 750dp) {
+    #menu-list button {
+        font-size: 26dp;
+        height: 45dp;
+        text-align: right;
+    }
+}
+
 /* Mobile layout */
 @media (max-height: 640dp) {
     .gradient {
@@ -419,6 +447,8 @@ body.animate-in .intro-item {
     #menu-list button {
         width: 100%;
         max-width: 100%;
+        font-size: 23dp;
+        height: 40dp;
         text-align: right;
     }
 
