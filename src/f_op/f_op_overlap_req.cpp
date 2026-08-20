@@ -8,8 +8,8 @@
 #include "f_pc/f_pc_manager.h"
 
 #ifdef TARGET_PC
+#include "dusk/game_mode.hpp"
 #include "dusk/speedrun.h"
-#include "dusk/gamemode.hpp"
 #endif
 
 void fopOvlpReq_SetPeektime(overlap_request_class*, u16);

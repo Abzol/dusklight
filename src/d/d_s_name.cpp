@@ -18,13 +18,13 @@
 #include "m_Do/m_Do_mtx.h"
 
 #ifdef TARGET_PC
+#include "dusk/autosave.h"
+#include "dusk/game_mode.hpp"
 #include "dusk/imgui/ImGuiConsole.hpp"
 #include "dusk/livesplit.h"
 #include "dusk/memory.h"
-#include "dusk/speedrun.h"
 #include "dusk/settings.h"
-#include "dusk/autosave.h"
-#include "dusk/gamemode.hpp"
+#include "dusk/speedrun.h"
 #endif
 
 #if TARGET_PC

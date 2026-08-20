@@ -28,9 +28,9 @@
 #endif
 
 #if TARGET_PC
-#include "dusk/settings.h"
-#include "dusk/gamemode.hpp"
 #include <f_ap/f_ap_game.h>
+#include "dusk/game_mode.hpp"
+#include "dusk/settings.h"
 
 #include "helpers/string.hpp"
 #define strcpy SafeStringCopy

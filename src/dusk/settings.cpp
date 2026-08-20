@@ -1,7 +1,7 @@
 #include "dusk/settings.h"
-#include "dusk/config.hpp"
-#include "dusk/gamemode.hpp"
 #include <aurora/aurora.h>
+#include "dusk/config.hpp"
+#include "dusk/game_mode.hpp"
 
 namespace dusk {
 

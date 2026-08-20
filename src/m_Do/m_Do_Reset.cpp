@@ -20,10 +20,8 @@
 #include "os_report.h"
 
 #ifdef TARGET_PC
+#include "dusk/game_mode.hpp"
 #include "dusk/ui/prelaunch.hpp"
-#include "dusk/ui/menu_bar.hpp"
-#include "dusk/ui/mods_window.hpp"
-#include "dusk/gamemode.hpp"
 #endif
 
 static void my_OSCancelAlarmAll() {}
@@ -112,9 +110,10 @@ void checkDiskCallback(s32 result, DVDCommandBlock* block) {
 
 void mDoRst_resetCallBack(int port, void*) {
 #ifdef TARGET_PC
-    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
-    if (gamemode) {
-        gamemode->invokeOnGameResetFunction();
+    const dusk::gamemode::GameMode* gameMode =
+        dusk::gamemode::getGameModeManager().getCurrentGameMode();
+    if (gameMode) {
+        gameMode->invokeOnGameResetFunction();
     }
 #endif
 
@@ -157,31 +156,10 @@ void mDoRst_resetCallBack(int port, void*) {
     }
     mDoRst::onReset();
 #ifdef TARGET_PC
-    // Show pre-launch only if we have a registered gamemode and are resetting from the menubar
-    if (dusk::ui::prelaunch_state().showPrelaunchOnReset == false) {
-        return;
+    if (dusk::ui::prelaunch_state().returnToPrelaunchOnReset) {
+        dusk::ui::return_to_prelaunch();
+        dusk::ui::prelaunch_state().returnToPrelaunchOnReset = false;
     }
-
-    bool prelaunchExists = false;
-    for (auto& doc : dusk::ui::get_document_stack()) {
-        if (auto* menubar = dynamic_cast<dusk::ui::MenuBar*>(doc.get())) {
-            // Hide the menu bar
-            menubar->Document::hide(true);
-        }
-        if (auto* modwindow = dynamic_cast<dusk::ui::ModsWindow*>(doc.get())) {
-            // Hide the mod window (if we were disasbling or reloading a mod)
-            modwindow->pop();
-        }
-        if (auto* prelaunch = dynamic_cast<dusk::ui::Prelaunch*>(doc.get())) {
-            prelaunchExists = true;
-            prelaunch->focus();
-        }
-    }
-    if (prelaunchExists == false) {
-        dusk::ui::Prelaunch& prelaunch = static_cast<dusk::ui::Prelaunch&>(dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true));
-        prelaunch.focus();
-    }
-    dusk::ui::prelaunch_state().showPrelaunchOnReset = false;
 #endif
 }
 

@@ -24,11 +24,11 @@
 #include "JSystem/JUtility/JUTConsole.h"
 
 #ifdef TARGET_PC
+#include "dusk/game_mode.hpp"
 #include "dusk/language.hpp"
 #include "dusk/logging.h"
 #include "dusk/main.h"
 #include "dusk/mods/svc/save.hpp"
-#include "dusk/gamemode.hpp"
 #include "dusk/version.hpp"
 #include "m_Do/m_Do_MemCard.h"
 #endif
@@ -809,9 +809,10 @@ void dScnLogo_c::nextSceneChange() {
                 if (status == 1) {
                     dusk::mods::svc::save_slot_loaded(
                         saveSlot, buf + saveSlot * SAVEDATA_SIZE);
-                    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
-                    if (gamemode) {
-                        gamemode->invokeOnSaveLoadedFunction();
+                    const dusk::gamemode::GameMode* gameMode =
+                        dusk::gamemode::getGameModeManager().getCurrentGameMode();
+                    if (gameMode) {
+                        gameMode->invokeOnSaveLoadedFunction();
                     }
                 }
 

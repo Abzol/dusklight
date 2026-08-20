@@ -8,13 +8,13 @@
 #define GAMEMODE_SERVICE_MINOR 0u
 
 typedef struct {
-    const char* gamemodeId;
+    const char* gameModeId;
     const char* fullName;
-    const char saveName[32];        // Should be unique. GCI Filenames are limited to 31 characters
-    void (*onActivatedFunction)();  // Called when the gamemode is selected
-    void (*onDeactivatedFunction)();  // Called when the gamemode is deselected
+    const char saveName[32];          // Empty uses default (gczelda2); max 31 chars
+    void (*onActivatedFunction)();    // Called when the game mode is selected
+    void (*onDeactivatedFunction)();  // Called when the game mode is deselected
     void (*onPlayFunction)();         // Called when play is pressed on the prelaunch menu
-    void (*onSaveLoadedFunction)();   // Called whenever a savefile is loaded
+    void (*onSaveLoadedFunction)();   // Called whenever a save file is loaded
     void (*onNewSaveFunction)();      // Called when a new save is created
     void (*onNewSaveSelectFunction)(bool* out_proceedToNameSelect,
         bool* out_returnToFileSelect);  // Set out_proceedToNameSelect to true once any UI flows are
@@ -27,7 +27,7 @@ typedef struct GameModeService {
     ServiceHeader header;
     ModResult (*register_game_mode)(ModContext* ctx, const GameModeDesc* desc);
     ModResult (*unregister_game_mode)(ModContext* ctx, const char* id);
-    ModResult (*is_active)(ModContext* ctx, const char* gamemodeId, bool* out_active);
+    ModResult (*is_active)(ModContext* ctx, const char* gameModeId, bool* out_active);
 } GameModeService;
 
 #ifdef __cplusplus

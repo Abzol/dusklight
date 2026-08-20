@@ -3,7 +3,7 @@
 #include "dusk/app_info.hpp"
 #include "dusk/config.hpp"
 #include "dusk/data.hpp"
-#include "dusk/gamemode.hpp"
+#include "dusk/game_mode.hpp"
 #include "dusk/iso_validate.hpp"
 #include "dusk/language.hpp"
 #include "dusk/main.h"
@@ -745,18 +745,17 @@ void try_apply_mirrored_layout(Rml::Element* body) {
     body->SetClass("mirrored", getSettings().game.enableMirrorMode.getValue());
 }
 
-void Prelaunch::rebuild_menu_buttons() {
-    for (auto& doc : get_document_stack()) {
-        if (auto* prelaunch = dynamic_cast<Prelaunch*>(doc.get())) {
-            auto* menuList = prelaunch->mDocument->GetElementById("menu-list");
-            while (menuList->GetNumChildren() > 0) {
-                menuList->RemoveChild(menuList->GetChild(0));
-            }
-            prelaunch->mMenuButtons.clear();
-            prelaunch->build_menu_buttons();
-            break;
-        }
+void Prelaunch::refresh_menu_buttons() {
+    auto* prelaunch = static_cast<Prelaunch*>(find_document(DocumentScope::Prelaunch));
+    if (prelaunch == nullptr) {
+        return;
     }
+    auto* menuList = prelaunch->mDocument->GetElementById("menu-list");
+    while (menuList->GetNumChildren() > 0) {
+        menuList->RemoveChild(menuList->GetChild(0));
+    }
+    prelaunch->mMenuButtons.clear();
+    prelaunch->build_menu_buttons();
 }
 
 static std::string get_playbutton_text() {
@@ -766,10 +765,10 @@ static std::string get_playbutton_text() {
         return "Select Disc Image";
     }
     std::string playText;
-    const dusk::gamemode::GameMode* currentGameMode =
-        dusk::gamemode::getGameModeManager().getCurrentGameMode();
+    const gamemode::GameMode* currentGameMode =
+        gamemode::getGameModeManager().getCurrentGameMode();
     if (currentGameMode != nullptr) {
-        return currentGameMode->getId() == dusk::gamemode::kVanillaGameModeId ? "Play" :
+        return currentGameMode->getId() == gamemode::kVanillaGameModeId ? "Play" :
                                                        "Play " + currentGameMode->getFullName();
     }
     return "Play";
@@ -821,7 +820,7 @@ Prelaunch::Prelaunch() : Document(kDocumentSource, false, DocumentScope::Prelaun
 void Prelaunch::build_menu_buttons() {
     if (auto* menuList = mDocument->GetElementById("menu-list")) {
         // Set the gamemode to the last used before showing the play button
-        dusk::gamemode::getGameModeManager().setGameModeToPrevious();
+        gamemode::getGameModeManager().setGameModeToPrevious();
 
         mMenuButtons.push_back(std::make_unique<Button>(menuList, get_playbutton_text()));
         mMenuButtons.back()->on_pressed([this] {
@@ -846,66 +845,52 @@ void Prelaunch::build_menu_buttons() {
             }
 
             prelaunch_state().firstLaunch = false;
-            const dusk::gamemode::GameMode* gamemode =
-                dusk::gamemode::getGameModeManager().getCurrentGameMode();
-            if (gamemode) {
-                gamemode->invokeOnPlayFunction();
+            const gamemode::GameMode* gameMode =
+                gamemode::getGameModeManager().getCurrentGameMode();
+            if (gameMode) {
+                gameMode->invokeOnPlayFunction();
             }
 
             IsGameLaunched = true;
-            pop();
-
-            // If we deleted the menubar on a previous reset, create it again here
-            bool menuBarExists = false;
-            for (auto& doc : dusk::ui::get_document_stack()) {
-                if (auto* menubar = dynamic_cast<dusk::ui::MenuBar*>(doc.get())) {
-                    menuBarExists = true;
-                    break;
-                }
-            }
-            if (menuBarExists) {
-                MenuBar::rebuild();
-            }else{
-                dusk::ui::push_document(std::make_unique<dusk::ui::MenuBar>(), false);
-            }
+            hide(true);
+            MenuBar::refresh_tabs();
         });
         apply_intro_animation(mMenuButtons.back()->root(), "delay-1");
 
-        // If we have more gamemodes registered than the default vanilla, show the gamemode
-        // selection
-        if (dusk::gamemode::getGameModeManager().getRegisteredGameModes().size() > 1) {
-            mMenuButtons.push_back(std::make_unique<Button>(menuList, "Select GameMode"));
+        // Only show selection when game modes are registered (besides vanilla)
+        if (gamemode::getGameModeManager().getRegisteredGameModes().size() > 1) {
+            mMenuButtons.push_back(std::make_unique<Button>(menuList, "Select Game Mode"));
             mMenuButtons.back()->on_pressed([this] {
-                std::vector<ModalAction> gamemodeActions;
-                gamemodeActions.push_back(dusk::ui::ModalAction{
-                    .label = "Vanilla", .onPressed = [this](dusk::ui::Modal& modal) {
+                std::vector<ModalAction> gameModeActions;
+                gameModeActions.push_back(ModalAction{
+                    .label = "Vanilla", .onPressed = [this](Modal& modal) {
                         mDoAud_seStartMenu(kSoundClick);
-                        dusk::gamemode::getGameModeManager().setCurrentGameMode(dusk::gamemode::kVanillaGameModeId);
+                        gamemode::getGameModeManager().setCurrentGameMode(gamemode::kVanillaGameModeId);
                         modal.pop();
                         update();
                     }});
-                for (const auto& [id, gamemode] :
-                    dusk::gamemode::getGameModeManager().getRegisteredGameModes())
+                for (const auto& [id, gameMode] :
+                    gamemode::getGameModeManager().getRegisteredGameModes())
                 {
-                    if (id == dusk::gamemode::kVanillaGameModeId) {
+                    if (id == gamemode::kVanillaGameModeId) {
                         // Force vanilla to the top
                         continue;
                     }
-                    gamemodeActions.push_back(dusk::ui::ModalAction{.label = gamemode.getFullName(),
-                        .onPressed = [this, id](dusk::ui::Modal& modal) {
+                    gameModeActions.push_back(ModalAction{.label = gameMode.getFullName(),
+                        .onPressed = [this, id](Modal& modal) {
                             mDoAud_seStartMenu(kSoundClick);
-                            dusk::gamemode::getGameModeManager().setCurrentGameMode(id);
+                            gamemode::getGameModeManager().setCurrentGameMode(id);
                             modal.pop();
                             update();
                         }});
                 }
                 mRestartSuppressed = false;
-                push(std::make_unique<dusk::ui::Modal>(dusk::ui::Modal::Props{
+                push(std::make_unique<Modal>(Modal::Props{
                     .title = "Play Type",
                     .bodyRml = "What mode would you like to play?",
-                    .actions = gamemodeActions,
+                    .actions = gameModeActions,
                     .onDismiss =
-                        [this](dusk::ui::Modal& modal) {
+                        [this](Modal& modal) {
                             mDoAud_seStartMenu(kSoundWindowClose);
                             modal.pop();
                         },
@@ -948,14 +933,14 @@ void Prelaunch::show() {
             modal.pop();
         };
         std::vector<ModalAction> actions;
-        if constexpr (dusk::SupportsProcessRestart) {
+        if constexpr (SupportsProcessRestart) {
             actions.push_back(ModalAction{
                 .label = "Restart later",
                 .onPressed = dismiss,
             });
             actions.push_back(ModalAction{
                 .label = "Restart now",
-                .onPressed = [](Modal&) { dusk::RequestRestart(); },
+                .onPressed = [](Modal&) { RequestRestart(); },
             });
         } else {
             actions.push_back(ModalAction{
@@ -966,7 +951,7 @@ void Prelaunch::show() {
         push(std::make_unique<Modal>(Modal::Props{
             .title = "Apply Options",
             .bodyRml =
-                dusk::SupportsProcessRestart ?
+                SupportsProcessRestart ?
                     "A restart is required to apply selected options.<br/><br/>Restart now to "
                     "apply them immediately?" :
                     "A restart is required to apply selected options.<br/><br/>Close and reopen "
@@ -1124,6 +1109,14 @@ void Prelaunch::update() {
     }
 
     Document::update();
+}
+
+void return_to_prelaunch() noexcept {
+    close_documents_except(DocumentScope::MenuBar);
+    if (auto* menuBar = find_document(DocumentScope::MenuBar)) {
+        menuBar->force_hide(false);
+    }
+    push_document(std::make_unique<Prelaunch>(), true);
 }
 
 bool Prelaunch::focus() {

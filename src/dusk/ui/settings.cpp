@@ -1246,7 +1246,7 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                             }
                             dusk::speedrun::unregisterSpeedrunGameMode();
                         }
-                        MenuBar::rebuild();
+                        MenuBar::refresh_tabs();
                     },
             });
         config_bool_select(leftPane, rightPane, getSettings().game.liveSplitEnabled,
@@ -1363,16 +1363,15 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                     "replacements, and other app data.");
             });
 #endif
-        leftPane.register_control(
-            leftPane.add_button("Restart To Main Menu").on_pressed([this] {
-                mDoAud_seStartMenu(kSoundClick);
-                pop();
-                ui::prelaunch_state().showPrelaunchOnReset = true;
-                JUTGamePad::C3ButtonReset::sResetSwitchPushing = true;
-            }),
+        leftPane.register_control(leftPane.add_button("Restart to Main Menu").on_pressed([this] {
+            mDoAud_seStartMenu(kSoundClick);
+            pop();
+            ui::prelaunch_state().returnToPrelaunchOnReset = true;
+            JUTGamePad::C3ButtonReset::sResetSwitchPushing = true;
+        }),
             rightPane, [](Pane& pane) {
-                pane.add_text(
-                    "Restart Dusklight to the pre-launch menu to change settings, gamemodes, or mods.");
+                pane.add_text("Restart Dusklight to the pre-launch menu to change settings, game "
+                              "modes, or mods.");
             });
         leftPane.register_control(
             leftPane.add_select_button({
@@ -1462,9 +1461,10 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
         config_bool_select(leftPane, rightPane, getSettings().backend.skipPreLaunchUI,
             {
                 .key = "Skip Dusklight Main Menu",
-                .helpText = "When starting Dusklight, skip the main menu and boot straight into the "
-                            "game if a disc image is available.<br/><br/>Note: If any mods register gamemodes, "
-                            "then this option will be ignored.",
+                .helpText =
+                    "When starting Dusklight, skip the main menu and boot straight into the "
+                    "game if a disc image is available.<br/><br/>Note: If any mods register game "
+                    "modes, this option will be ignored.",
             });
         config_bool_select(leftPane, rightPane, getSettings().backend.checkForUpdates,
             {
@@ -1493,7 +1493,7 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                 .helpText = "Show advanced settings and debugging tools with "
                             "Shift+F1.<br/><br/><icon class=\"warning\"/> WARNING: Debugging tools "
                             "can easily break your game. Do not use on a regular save!",
-                .onChange = [](bool) { MenuBar::rebuild(); },
+                .onChange = [](bool) { MenuBar::refresh_tabs(); },
                 .isDisabled = [] { return dusk::speedrun::isActive(); },
             });
         config_bool_select(leftPane, rightPane, getSettings().game.showInputViewer,

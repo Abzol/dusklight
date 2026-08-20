@@ -1,7 +1,6 @@
 #pragma once
 #include <aurora/aurora.h>
-#include "dusk/gamemode.hpp"
-
+#include "dusk/game_mode.hpp"
 
 namespace dusk::speedrun {
 

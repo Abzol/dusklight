@@ -26,10 +26,10 @@
 #include "dusk/version.hpp"
 
 #if TARGET_PC
+#include "dusk/game_mode.hpp"
 #include "dusk/menu_pointer.h"
-#include "helpers/string.hpp"
 #include "dusk/mods/svc/save.hpp"
-#include "dusk/gamemode.hpp"
+#include "helpers/string.hpp"
 
 namespace {
 constexpr u8 pointer_target(u8 group, u8 index) noexcept {
@@ -1315,11 +1315,13 @@ void dFile_select_c::selectDataNameMove() {
     bool isModoruTxtDisp = modoruTxtDispAnm();
 
 #ifdef TARGET_PC
-    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
-    if (gamemode) {
-        if (isHeaderTxtChange == true && isFileRecScale == true && isModoruTxtDisp == true) {    
+    const dusk::gamemode::GameMode* gameMode =
+        dusk::gamemode::getGameModeManager().getCurrentGameMode();
+    if (gameMode) {
+        if (isHeaderTxtChange == true && isFileRecScale == true && isModoruTxtDisp == true) {
             if (mGameModeSaveStartBuildUi) {
-                gamemode->invokeOnNewSaveSelectFunction(&mGameModeProceedToNameSelect, &mGameModeReturnToFileSelect);
+                gameMode->invokeOnNewSaveSelectFunction(
+                    &mGameModeProceedToNameSelect, &mGameModeReturnToFileSelect);
                 mGameModeSaveStartBuildUi = false;
             }
             if (mGameModeReturnToFileSelect) {
@@ -1430,9 +1432,10 @@ void dFile_select_c::menuSelectStart() {
 #if TARGET_PC
         dusk::mods::svc::save_slot_loaded(mSelectNum, &mSaveData[mSelectNum]);
 
-        const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
-        if (gamemode) {
-            gamemode->invokeOnSaveLoadedFunction();
+        const dusk::gamemode::GameMode* gameMode =
+            dusk::gamemode::getGameModeManager().getCurrentGameMode();
+        if (gameMode) {
+            gameMode->invokeOnSaveLoadedFunction();
         }
 #endif
     } else if (mSelectMenuNum == 0) {
@@ -1787,10 +1790,11 @@ void dFile_select_c::nameInput2() {
         mIsSelectEnd = true;
 #if TARGET_PC
         dusk::mods::svc::save_slot_new(mSelectNum);
-        const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
-        if (gamemode) {
-            gamemode->invokeOnNewSaveFunction();
-            gamemode->invokeOnSaveLoadedFunction();
+        const dusk::gamemode::GameMode* gameMode =
+            dusk::gamemode::getGameModeManager().getCurrentGameMode();
+        if (gameMode) {
+            gameMode->invokeOnNewSaveFunction();
+            gameMode->invokeOnSaveLoadedFunction();
         }
 #endif
         mDataSelProc = DATASELPROC_NEXT_MODE_WAIT;

@@ -13,10 +13,10 @@
 
 #ifdef TARGET_PC
 #include <dusk/autosave.h>
-#include "dusk/livesplit.h"
+#include "dusk/game_mode.hpp"
 #include "dusk/imgui/ImGuiConsole.hpp"
+#include "dusk/livesplit.h"
 #include "dusk/speedrun.h"
-#include "dusk/gamemode.hpp"
 #endif
 
 #include "dusk/version.hpp"

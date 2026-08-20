@@ -1,21 +1,24 @@
 #pragma once
+
+#include "d/d_file_select.h"
+
 #include <functional>
 #include <map>
-#include "d/d_file_select.h"
+#include <string>
+#include <utility>
 
 namespace dusk::gamemode {
 using GameModeId = std::string;
 
 constexpr const char* kVanillaGameModeId = "vanilla";
+constexpr const char* kDefaultGameModeSaveName = "gczelda2";
 
-// This class holds the definition for the gamemode and various function pointers to call
+// Holds a game mode definition and its lifecycle callbacks.
 class GameMode {
 public:
-    GameMode(const GameModeId& id, const std::string& fullName, const std::string& saveName) {
-        mId = id;
-        mFullName = fullName;
-        mSaveName = saveName;
-    }
+    GameMode(GameModeId id, std::string fullName, std::string saveName = {})
+        : mId{std::move(id)}, mFullName{std::move(fullName)},
+          mSaveName{saveName.empty() ? kDefaultGameModeSaveName : std::move(saveName)} {}
     const GameModeId& getId() const { return mId; }
     const std::string& getFullName() const { return mFullName; }
     const std::string& getSaveName() const { return mSaveName; }
@@ -53,11 +56,12 @@ public:
             mOnNewSaveFunction();
         }
     }
-    
-    void invokeOnNewSaveSelectFunction(bool* out_proceedToNameSelect, bool* out_returnToFileSelect) const {
+
+    void invokeOnNewSaveSelectFunction(
+        bool* out_proceedToNameSelect, bool* out_returnToFileSelect) const {
         if (mOnNewSaveSelectFunction) {
             mOnNewSaveSelectFunction(out_proceedToNameSelect, out_returnToFileSelect);
-        }else {
+        } else {
             *out_proceedToNameSelect = true;
         }
     }
@@ -79,7 +83,8 @@ public:
     std::function<void()> mOnPlayFunction;
     std::function<void()> mOnSaveLoadedFunction;
     std::function<void()> mOnNewSaveFunction;
-    std::function<void(bool* out_proceedToNameSelect, bool* out_returnToFileSelect)> mOnNewSaveSelectFunction;
+    std::function<void(bool* out_proceedToNameSelect, bool* out_returnToFileSelect)>
+        mOnNewSaveSelectFunction;
     std::function<void()> mOnGameResetFunction;
     std::function<void()> mOnTickFunction;
 };
@@ -87,16 +92,17 @@ public:
 class GameModeManager {
 public:
     GameModeManager();
-    void registerGameMode(const GameMode& gamemode);
-    void unregisterGameMode(const GameModeId& gamemodeId);
+    void registerGameMode(const GameMode& gameMode);
+    void unregisterGameMode(const GameModeId& gameModeId);
 
     const GameMode* getCurrentGameMode() const {
         const auto& it = mRegisteredGameModes.find(mCurrentGameModeId);
-        return it != mRegisteredGameModes.end() ? &it->second : &mRegisteredGameModes.at(kVanillaGameModeId);
+        return it != mRegisteredGameModes.end() ? &it->second :
+                                                  &mRegisteredGameModes.at(kVanillaGameModeId);
     }
     bool isCurrentGameMode(const GameModeId& id) const {
-        const GameMode* gamemode = getCurrentGameMode();
-        if (gamemode && gamemode->getId() == id) {
+        const GameMode* gameMode = getCurrentGameMode();
+        if (gameMode && gameMode->getId() == id) {
             return true;
         }
         return false;
@@ -104,7 +110,9 @@ public:
     void setCurrentGameMode(const GameModeId& id);
     void setGameModeToPrevious();
 
-    std::map<GameModeId, GameMode>& getRegisteredGameModes() { return mRegisteredGameModes; }
+    const std::map<GameModeId, GameMode>& getRegisteredGameModes() const {
+        return mRegisteredGameModes;
+    }
 
 private:
     GameModeId mCurrentGameModeId;
@@ -117,4 +125,4 @@ inline GameModeManager& getGameModeManager() {
     return g_GameModeManager;
 }
 
-};  // namespace dusk::gamemode
+}  // namespace dusk::gamemode

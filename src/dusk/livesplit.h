@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "dusk/gamemode.hpp"
+#include "dusk/game_mode.hpp"
 #include "dusk/speedrun.h"
 
 namespace dusk::speedrun {

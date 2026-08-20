@@ -23,7 +23,7 @@ public:
     bool visible() const override;
     bool obscures_game() const override { return true; }
 
-    static void rebuild_menu_buttons();
+    static void refresh_menu_buttons();
 
 protected:
     bool handle_nav_command(Rml::Event& event, NavCommand cmd) override;
@@ -62,10 +62,11 @@ struct PrelaunchState {
     std::string pendingDiscPath;
     iso::DiscInfo pendingDiscInfo{};
     iso::ValidationError pendingDiscValidation = iso::ValidationError::Unknown;
-    bool showPrelaunchOnReset = false;
+    bool returnToPrelaunchOnReset = false;
 };
 
 PrelaunchState& prelaunch_state() noexcept;
+void return_to_prelaunch() noexcept;
 void ensure_initialized() noexcept;
 void refresh_configured_disc_state() noexcept;
 void open_iso_picker() noexcept;

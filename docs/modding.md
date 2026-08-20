@@ -638,14 +638,9 @@ state for the current frame. Register and unregister using `register_camera_oper
 
 ### GameModeService (`mods/svc/gamemode.h`)
 
-Allows a mod to register a gamemode that allows the game to designate one form of gameplay (named a gamemode). This
-is intended to allow large mods that change large amounts of game logic (such as a randomizer) to have explicit control
-over how the game will function at certain points. When a gamemode is registered via the service, it will add an entry
-to the pre-launch menu. When selected, the game will use a unique set of savefiles (designated by the `saveName` field) 
-to store save data while the gamemode is active. Any function pointers registered with the gamemode will be called by
-dusklight when their condition is met.
-
-Note: for any gamemode wishing to use the vanilla set of savefiles, use `gczelda2` as the save file name.
+Allows a mod to register a game mode with callbacks for key gameplay and save lifecycle events. Registered game modes
+appear in the prelaunch menu. Game modes may use a unique set of saves by configuring `saveName`; leave it empty to use
+the vanilla `gczelda2` save.
 
 ```cpp
 // An example that shows registering a gamemode with function hooks that are scoped to the gamemode being active
@@ -653,17 +648,17 @@ IMPORT_SERVICE(LogService, svc_log);
 IMPORT_SERVICE(HookService, svc_hook);
 IMPORT_SERVICE(GameModeService, svc_gamemode);
 
-#define MY_GAMEMODE_ID "gamemodeid"
+DEFINE_HOOK(fopAcM_createItem, CreateItem);
 
+#define MY_GAME_MODE_ID "game-mode-id"
 
 static HookAction myFunctionHook(ModContext *ctx, void *args, void *, void *) {
     // If we wish to have this hook only run while the gamemode is registered, we need to hook the function from the
-    // gamemode's onActivatedFunction, and uninstall the hook during the onDeactivatedFunction. An example is given below
+    // gamemode's onActivatedFunction, and uninstall the hook during the onDeactivatedFunction. Example below.
+    // Alternatively, check with `svc_gamemode->is_active(mod_ctx, MY_GAME_MODE_ID, &active) == MOD_OK && active`.
 
     return HOOK_CONTINUE;
 }
-
-DEFINE_HOOK(fopAcM_createItem, CreateItem);
 
 void onGameModeActivated() {
     // Setup the gamemode, Add any hooks that are gamemode specific
@@ -676,7 +671,7 @@ void onGameModeActivated() {
 
 void onGameModeDeactivated() {
     // Uninstall any hooks that are gamemode specific
-    // Remove overlays to any files that are gamemode specific
+    // Remove any file overlays that are gamemode specific
     ModResult result = mods::hook_uninstall<CreateItem>();
     if (result != MOD_OK) {
         svc_log->error(mod_ctx, "failed to uninstall CreateItem hook");
@@ -687,27 +682,24 @@ void onSaveLoaded() {
     // This function will be invoked by the game as a save is loaded
 }
 
-// Register the gamemode when the mod is initialized
-const GameModeDesc gamemodeDesc = {
-    .gamemodeId = MY_GAMEMODE_ID,
-    .fullName = "GameMode Name",
-    // The save name should be something that other gamemodes will not try to use, so appending your name to it
-    // is reccomended. Note: it is limited to 31 characters long
-    .saveName = "my-unique-save_developer-name",
-    .onActivatedFunction = onGameModeActivated, // Called when the gamemode is selected on the prelaunch menu (or is launched)
-    .onDeactivatedFunction = onGameModeDeactivated, // Called when the gamemode is deselected on the prelaunch menu (or the mod is disabled)
+// Register the game mode when the mod is initialized.
+const GameModeDesc gameModeDesc = {
+    .gameModeId = MY_GAME_MODE_ID,
+    .fullName = "My Game Mode",
+    .saveName = "my-unique-save", // Custom save names should be unique, max 31 chars
+    .onActivatedFunction = onGameModeActivated, // Called when the game mode is selected or launched
+    .onDeactivatedFunction = onGameModeDeactivated, // Called when it is deselected or the mod is disabled
     .onPlayFunction = nullptr, // Called when "Play" is pressed on the prelaunch menu
     .onSaveLoadedFunction = onSaveLoaded, // Called when a save is loaded
     .onNewSaveFunction = nullptr, // Called after a new savefile is created
     .onNewSaveSelectFunction = nullptr, // Called during the flow before the file name select is ran (see below)
     .onGameResetFunction = nullptr, // Called when the game is reset
-    .onTickFunction = nullptr, // Called every game tick while the gamemode is active
+    .onTickFunction = nullptr, // Called every game tick while the game mode is active
 };
-svc_gamemode->register_gamemode(mod_ctx, &gamemodeDesc);
+svc_gamemode->register_game_mode(mod_ctx, &gameModeDesc);
 ```
 
-Within the gamemode service, a gamemode can also request to load a UI for per-save file settings when the button to
-create a new file is pressed.
+A game mode can also open UI for per-save settings when creating a new file.
 
 ```cpp
 IMPORT_SERVICE(GameModeService, svc_gamemode);
@@ -753,13 +745,13 @@ void onNewSaveSelect(bool *out_proceedToNameSelect, bool *out_returnToFileSelect
     svc_ui->window_push(mod_ctx, &desc, &windowHandle);
 }
 
-const GameModeDesc gamemodeDesc = {
-    .gamemodeId = "my-gamemode-id",
-    .fullName = "My GameMode",
-    .saveName = "my-gamemode-save",
+const GameModeDesc gameModeDesc = {
+    .gameModeId = "my-game-mode-id",
+    .fullName = "My Game Mode",
+    .saveName = "my-unique-save",
     .onNewSaveSelectFunction = onNewSaveSelect,
 };
-svc_gamemode->register_gamemode(mod_ctx, &gamemodeDesc);
+svc_gamemode->register_game_mode(mod_ctx, &gameModeDesc);
 
 ```
 

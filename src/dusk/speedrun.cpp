@@ -1,10 +1,10 @@
 #include "dusk/speedrun.h"
-#include "dusk/settings.h"
-#include "dusk/config.hpp"
-#include "m_Do/m_Do_main.h"
 #include <aurora/aurora.h>
-#include "dusk/gamemode.hpp"
+#include "dusk/config.hpp"
+#include "dusk/game_mode.hpp"
 #include "dusk/livesplit.h"
+#include "dusk/settings.h"
+#include "m_Do/m_Do_main.h"
 
 namespace dusk::speedrun {
 

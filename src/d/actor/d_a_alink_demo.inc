@@ -24,10 +24,10 @@
 #include <cstring>
 
 #ifdef TARGET_PC
+#include "dusk/game_mode.hpp"
 #include "dusk/imgui/ImGuiConsole.hpp"
 #include "dusk/settings.h"
 #include "dusk/speedrun.h"
-#include "dusk/gamemode.hpp"
 #include "dusk/version.hpp"
 #endif
 
