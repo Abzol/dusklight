@@ -1305,8 +1305,8 @@ void AchievementSystem::processEntry(Entry& e) {
 
 void AchievementSystem::tick() {
     // Until we implement an AchievementService, achievements will be unavailible in custom gamemodes
-    if (dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::gamemode::kVanillaGamemodeId) == false
-        && dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::speedrun::kSpeedrunGamemodeId) == false) {
+    if (dusk::gamemode::getGameModeManager().isCurrentGameMode(dusk::gamemode::kVanillaGameModeId) == false
+        && dusk::gamemode::getGameModeManager().isCurrentGameMode(dusk::speedrun::kSpeedrunGameModeId) == false) {
         m_signals.clear();
         return;
     }

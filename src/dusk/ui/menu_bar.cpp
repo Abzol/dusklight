@@ -64,8 +64,8 @@ MenuBar::MenuBar()
     }
 
     // Only allow us to access achievements if we are playing on a gamemode that uses them
-    if (dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::gamemode::kVanillaGamemodeId)
-        || dusk::gamemode::getGamemodeManager().isCurrentGamemode(dusk::speedrun::kSpeedrunGamemodeId)) {
+    if (dusk::gamemode::getGameModeManager().isCurrentGameMode(dusk::gamemode::kVanillaGameModeId)
+        || dusk::gamemode::getGameModeManager().isCurrentGameMode(dusk::speedrun::kSpeedrunGameModeId)) {
         mTabBar->add_tab("Achievements", [this] { push(std::make_unique<AchievementsWindow>()); });
     }
     mTabBar->add_tab("Mods", [this] { push(std::make_unique<ModsWindow>()); });
@@ -100,7 +100,7 @@ MenuBar::MenuBar()
                                     return;
                                 }
                                 dismiss(modal);
-                                if (gamemode::getGamemodeManager().getRegisteredGamemodes().size() > 1) {
+                                if (gamemode::getGameModeManager().getRegisteredGameModes().size() > 1) {
                                     // If we have gamemodes registered, show pre-launch on a menubar reset
                                     prelaunch_state().showPrelaunchOnReset = true;
                                     Document::hide(true);

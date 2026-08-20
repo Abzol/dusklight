@@ -809,7 +809,7 @@ void dScnLogo_c::nextSceneChange() {
                 if (status == 1) {
                     dusk::mods::svc::save_slot_loaded(
                         saveSlot, buf + saveSlot * SAVEDATA_SIZE);
-                    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+                    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
                     if (gamemode) {
                         gamemode->invokeOnSaveLoadedFunction();
                     }

@@ -32,7 +32,7 @@ void gamemode_remove_mod(LoadedMod& mod) {
     const auto it = s_gamemodesRegisteredToMods.find(mod.metadata.id);
     if (it != s_gamemodesRegisteredToMods.end()) {
         for (const auto& id : it->second) {
-            dusk::gamemode::getGamemodeManager().unregisterGamemode(id);
+            dusk::gamemode::getGameModeManager().unregisterGameMode(id);
         }
         s_gamemodesRegisteredToMods.erase(it);
     }
@@ -40,7 +40,7 @@ void gamemode_remove_mod(LoadedMod& mod) {
 }  // namespace
 
 
-ModResult register_gamemode(ModContext* ctx, const GamemodeDesc* desc) {
+ModResult register_gamemode(ModContext* ctx, const GameModeDesc* desc) {
     std::string id;
     if (!desc->gamemodeId) {
         Log.error("Attempted to register a gamemode with a null id!");
@@ -71,7 +71,7 @@ ModResult register_gamemode(ModContext* ctx, const GamemodeDesc* desc) {
         saveName = "gczelda2";
     }
    
-    dusk::gamemode::Gamemode gamemode(id, fullName, saveName);
+    dusk::gamemode::GameMode gamemode(id, fullName, saveName);
     
     if (desc->onActivatedFunction) {
         gamemode.mOnActivatedFunction = desc->onActivatedFunction;
@@ -98,12 +98,12 @@ ModResult register_gamemode(ModContext* ctx, const GamemodeDesc* desc) {
         gamemode.mOnTickFunction = desc->onTickFunction;
     }
 
-    dusk::gamemode::getGamemodeManager().registerGamemode(gamemode);
+    dusk::gamemode::getGameModeManager().registerGameMode(gamemode);
 
     const auto it = s_gamemodesRegisteredToMods.find(ctx->mod->metadata.id);
     if (it == s_gamemodesRegisteredToMods.end()) {
-        std::vector<std::string> registeredGamemodes = {id};
-        s_gamemodesRegisteredToMods.emplace(ctx->mod->metadata.id, registeredGamemodes);
+        std::vector<std::string> registeredGameModes = {id};
+        s_gamemodesRegisteredToMods.emplace(ctx->mod->metadata.id, registeredGameModes);
     }else {
         it->second.push_back(id);
     }
@@ -113,7 +113,7 @@ ModResult register_gamemode(ModContext* ctx, const GamemodeDesc* desc) {
 
 ModResult unregister_gamemode(ModContext* ctx, const char* id) {
     std::string fullId = get_mod_gamemode_id(ctx,id);
-    dusk::gamemode::getGamemodeManager().unregisterGamemode(fullId);
+    dusk::gamemode::getGameModeManager().unregisterGameMode(fullId);
 
     // Remove the gamemode from the service registered gamemodes map
     auto it = s_gamemodesRegisteredToMods.find(ctx->mod->metadata.id);
@@ -124,7 +124,7 @@ ModResult unregister_gamemode(ModContext* ctx, const char* id) {
 }
 
 ModResult is_active(ModContext* ctx, const char* gamemodeId, bool* out_active) {
-    *out_active = dusk::gamemode::getGamemodeManager().isCurrentGamemode(get_mod_gamemode_id(ctx,gamemodeId));
+    *out_active = dusk::gamemode::getGameModeManager().isCurrentGameMode(get_mod_gamemode_id(ctx,gamemodeId));
     return MOD_OK;
 }
 
@@ -133,10 +133,10 @@ ModResult is_active(ModContext* ctx, const char* gamemodeId, bool* out_active) {
 namespace dusk::mods::svc {
 namespace {
 
-constexpr GamemodeService s_gamemodeService{
-    .header = SERVICE_HEADER(GamemodeService, GAMEMODE_SERVICE_MAJOR, GAMEMODE_SERVICE_MINOR),
-    .register_gamemode = gamemode_impl::register_gamemode,
-    .unregister_gamemode = gamemode_impl::unregister_gamemode,
+constexpr GameModeService s_gamemodeService{
+    .header = SERVICE_HEADER(GameModeService, GAMEMODE_SERVICE_MAJOR, GAMEMODE_SERVICE_MINOR),
+    .register_game_mode = gamemode_impl::register_gamemode,
+    .unregister_game_mode = gamemode_impl::unregister_gamemode,
     .is_active = gamemode_impl::is_active
 };
 

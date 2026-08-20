@@ -21,20 +21,20 @@ typedef struct {
                                         // completed
     void (*onGameResetFunction)();      // Called when the game is reset
     void (*onTickFunction)();           // Called on every tick
-} GamemodeDesc;
+} GameModeDesc;
 
-typedef struct GamemodeService {
+typedef struct GameModeService {
     ServiceHeader header;
-    ModResult (*register_gamemode)(ModContext* ctx, const GamemodeDesc* desc);
-    ModResult (*unregister_gamemode)(ModContext* ctx, const char* id);
+    ModResult (*register_game_mode)(ModContext* ctx, const GameModeDesc* desc);
+    ModResult (*unregister_game_mode)(ModContext* ctx, const char* id);
     ModResult (*is_active)(ModContext* ctx, const char* gamemodeId, bool* out_active);
-} GamemodeService;
+} GameModeService;
 
 #ifdef __cplusplus
 #include "mods/service.hpp"
 
 template <>
-struct mods::ServiceTraits<GamemodeService> {
+struct mods::ServiceTraits<GameModeService> {
     static constexpr const char* id = GAMEMODE_SERVICE_ID;
     static constexpr uint16_t major_version = GAMEMODE_SERVICE_MAJOR;
     static constexpr uint16_t minor_version = GAMEMODE_SERVICE_MINOR;

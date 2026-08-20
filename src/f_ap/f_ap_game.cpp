@@ -846,7 +846,7 @@ void fapGm_Execute() {
 
     cCt_Counter(0);
 #ifdef TARGET_PC
-    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
     if (gamemode) {
         gamemode->invokeOnTickFunction();
     }

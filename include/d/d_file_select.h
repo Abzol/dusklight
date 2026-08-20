@@ -740,9 +740,9 @@ public:
     #endif
 #ifdef TARGET_PC
     dDlst_FileSelFade_c mFadeDlst;
-    bool mGamemodeSaveStartBuildUi = true;
-    bool mGamemodeProceedToNameSelect = false;
-    bool mGamemodeReturnToFileSelect = false;
+    bool mGameModeSaveStartBuildUi = true;
+    bool mGameModeProceedToNameSelect = false;
+    bool mGameModeReturnToFileSelect = false;
 #endif
 
     #if PLATFORM_WII || PLATFORM_SHIELD

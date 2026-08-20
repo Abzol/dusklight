@@ -158,7 +158,7 @@ UserSettings g_userSettings = {
         .removeQuestMapMarkers {"game.removeQuestMapMarkers", false},
         .showInputViewer {"game.showInputViewer", false},
         .showInputViewerGyro {"game.showInputViewerGyro", false},
-        .lastSelectedGamemodeId {"game.lastSelectedGamemodeId", gamemode::kVanillaGamemodeId}
+        .lastSelectedGameModeId {"game.lastSelectedGameModeId", gamemode::kVanillaGameModeId}
     },
 
     .backend = {
@@ -308,7 +308,7 @@ void registerSettings() {
     Register(g_userSettings.game.removeQuestMapMarkers);
     Register(g_userSettings.game.showInputViewer);
     Register(g_userSettings.game.showInputViewerGyro);
-    Register(g_userSettings.game.lastSelectedGamemodeId);
+    Register(g_userSettings.game.lastSelectedGameModeId);
     Register(g_userSettings.game.fastSpinner);
     Register(g_userSettings.game.infiniteHearts);
     Register(g_userSettings.game.infiniteArrows);

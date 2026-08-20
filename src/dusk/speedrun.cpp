@@ -21,18 +21,18 @@ static void onSpeedrunModeDeactive() {
     }
 }
 
-void registerSpeedrunGamemode() {
-    dusk::gamemode::Gamemode speedrunGamemode(kSpeedrunGamemodeId,"Speedrun","gczelda2-speedrun");
-    speedrunGamemode.mOnSaveLoadedFunction = dusk::speedrun::start;
-    speedrunGamemode.mOnActivatedFunction = onSpeedrunModeActive;
-    speedrunGamemode.mOnDeactivatedFunction = onSpeedrunModeDeactive;
-    speedrunGamemode.mOnTickFunction = dusk::speedrun::onGameFrame;
+void registerSpeedrunGameMode() {
+    dusk::gamemode::GameMode speedrunGameMode(kSpeedrunGameModeId,"Speedrun","gczelda2-speedrun");
+    speedrunGameMode.mOnSaveLoadedFunction = dusk::speedrun::start;
+    speedrunGameMode.mOnActivatedFunction = onSpeedrunModeActive;
+    speedrunGameMode.mOnDeactivatedFunction = onSpeedrunModeDeactive;
+    speedrunGameMode.mOnTickFunction = dusk::speedrun::onGameFrame;
 
-    dusk::gamemode::getGamemodeManager().registerGamemode(speedrunGamemode);
+    dusk::gamemode::getGameModeManager().registerGameMode(speedrunGameMode);
 }
 
-void unregisterSpeedrunGamemode() {
-    dusk::gamemode::getGamemodeManager().unregisterGamemode(kSpeedrunGamemodeId);
+void unregisterSpeedrunGameMode() {
+    dusk::gamemode::getGameModeManager().unregisterGameMode(kSpeedrunGameModeId);
 }
 
 void resetForSpeedrunMode() {

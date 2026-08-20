@@ -1315,21 +1315,21 @@ void dFile_select_c::selectDataNameMove() {
     bool isModoruTxtDisp = modoruTxtDispAnm();
 
 #ifdef TARGET_PC
-    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
     if (gamemode) {
         if (isHeaderTxtChange == true && isFileRecScale == true && isModoruTxtDisp == true) {    
-            if (mGamemodeSaveStartBuildUi) {
-                gamemode->invokeOnNewSaveSelectFunction(&mGamemodeProceedToNameSelect, &mGamemodeReturnToFileSelect);
-                mGamemodeSaveStartBuildUi = false;
+            if (mGameModeSaveStartBuildUi) {
+                gamemode->invokeOnNewSaveSelectFunction(&mGameModeProceedToNameSelect, &mGameModeReturnToFileSelect);
+                mGameModeSaveStartBuildUi = false;
             }
-            if (mGamemodeReturnToFileSelect) {
+            if (mGameModeReturnToFileSelect) {
                 backToDataSelectMove();
-                mGamemodeSaveStartBuildUi = true;
-                mGamemodeProceedToNameSelect = false;
-                mGamemodeReturnToFileSelect = false;
+                mGameModeSaveStartBuildUi = true;
+                mGameModeProceedToNameSelect = false;
+                mGameModeReturnToFileSelect = false;
                 return;
             }
-            if (!mGamemodeProceedToNameSelect) {
+            if (!mGameModeProceedToNameSelect) {
                 return;
             }
         }else {
@@ -1344,9 +1344,9 @@ void dFile_select_c::selectDataNameMove() {
         isModoruTxtDisp == true)
     {
 #ifdef TARGET_PC
-        mGamemodeSaveStartBuildUi = true;
-        mGamemodeProceedToNameSelect = false;
-        mGamemodeReturnToFileSelect = false;
+        mGameModeSaveStartBuildUi = true;
+        mGameModeProceedToNameSelect = false;
+        mGameModeReturnToFileSelect = false;
 #endif
         mDataSelProc = DATASELPROC_NAME_INPUT_WAIT;
     }
@@ -1430,7 +1430,7 @@ void dFile_select_c::menuSelectStart() {
 #if TARGET_PC
         dusk::mods::svc::save_slot_loaded(mSelectNum, &mSaveData[mSelectNum]);
 
-        const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+        const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
         if (gamemode) {
             gamemode->invokeOnSaveLoadedFunction();
         }
@@ -1787,7 +1787,7 @@ void dFile_select_c::nameInput2() {
         mIsSelectEnd = true;
 #if TARGET_PC
         dusk::mods::svc::save_slot_new(mSelectNum);
-        const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+        const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
         if (gamemode) {
             gamemode->invokeOnNewSaveFunction();
             gamemode->invokeOnSaveLoadedFunction();

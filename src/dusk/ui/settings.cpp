@@ -1239,12 +1239,12 @@ SettingsWindow::SettingsWindow(bool prelaunch) : mPrelaunch(prelaunch) {
                 .onChange =
                     [this](bool enabled) {
                         if (enabled) {
-                            dusk::speedrun::registerSpeedrunGamemode();
+                            dusk::speedrun::registerSpeedrunGameMode();
                         } else {
                             if (dusk::speedrun::isActive()) {
                                 pop();
                             }
-                            dusk::speedrun::unregisterSpeedrunGamemode();
+                            dusk::speedrun::unregisterSpeedrunGameMode();
                         }
                         MenuBar::rebuild();
                     },

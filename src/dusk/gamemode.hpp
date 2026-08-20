@@ -4,23 +4,23 @@
 #include "d/d_file_select.h"
 
 namespace dusk::gamemode {
-using GamemodeId = std::string;
+using GameModeId = std::string;
 
-constexpr const char* kVanillaGamemodeId = "vanilla";
+constexpr const char* kVanillaGameModeId = "vanilla";
 
 // This class holds the definition for the gamemode and various function pointers to call
-class Gamemode {
+class GameMode {
 public:
-    Gamemode(const GamemodeId& id, const std::string& fullName, const std::string& saveName) {
+    GameMode(const GameModeId& id, const std::string& fullName, const std::string& saveName) {
         mId = id;
         mFullName = fullName;
         mSaveName = saveName;
     }
-    const GamemodeId& getId() const { return mId; }
+    const GameModeId& getId() const { return mId; }
     const std::string& getFullName() const { return mFullName; }
     const std::string& getSaveName() const { return mSaveName; }
 
-    GamemodeId mId;
+    GameModeId mId;
     std::string mFullName;
     std::string mSaveName;
 
@@ -84,37 +84,37 @@ public:
     std::function<void()> mOnTickFunction;
 };
 
-class GamemodeManager {
+class GameModeManager {
 public:
-    GamemodeManager();
-    void registerGamemode(const Gamemode& gamemode);
-    void unregisterGamemode(const GamemodeId& gamemodeId);
+    GameModeManager();
+    void registerGameMode(const GameMode& gamemode);
+    void unregisterGameMode(const GameModeId& gamemodeId);
 
-    const Gamemode* getCurrentGamemode() const {
-        const auto& it = mRegisteredGamemodes.find(mCurrentGamemodeId);
-        return it != mRegisteredGamemodes.end() ? &it->second : &mRegisteredGamemodes.at(kVanillaGamemodeId);
+    const GameMode* getCurrentGameMode() const {
+        const auto& it = mRegisteredGameModes.find(mCurrentGameModeId);
+        return it != mRegisteredGameModes.end() ? &it->second : &mRegisteredGameModes.at(kVanillaGameModeId);
     }
-    bool isCurrentGamemode(const GamemodeId& id) const {
-        const Gamemode* gamemode = getCurrentGamemode();
+    bool isCurrentGameMode(const GameModeId& id) const {
+        const GameMode* gamemode = getCurrentGameMode();
         if (gamemode && gamemode->getId() == id) {
             return true;
         }
         return false;
     }
-    void setCurrentGamemode(const GamemodeId& id);
-    void setGamemodeToPrevious();
+    void setCurrentGameMode(const GameModeId& id);
+    void setGameModeToPrevious();
 
-    std::map<GamemodeId, Gamemode>& getRegisteredGamemodes() { return mRegisteredGamemodes; }
+    std::map<GameModeId, GameMode>& getRegisteredGameModes() { return mRegisteredGameModes; }
 
 private:
-    GamemodeId mCurrentGamemodeId;
-    std::map<GamemodeId, Gamemode> mRegisteredGamemodes;
+    GameModeId mCurrentGameModeId;
+    std::map<GameModeId, GameMode> mRegisteredGameModes;
 };
 
-extern GamemodeManager g_GamemodeManager;
+extern GameModeManager g_GameModeManager;
 
-inline GamemodeManager& getGamemodeManager() {
-    return g_GamemodeManager;
+inline GameModeManager& getGameModeManager() {
+    return g_GameModeManager;
 }
 
 };  // namespace dusk::gamemode

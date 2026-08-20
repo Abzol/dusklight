@@ -112,7 +112,7 @@ void checkDiskCallback(s32 result, DVDCommandBlock* block) {
 
 void mDoRst_resetCallBack(int port, void*) {
 #ifdef TARGET_PC
-    const dusk::gamemode::Gamemode* gamemode = dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+    const dusk::gamemode::GameMode* gamemode = dusk::gamemode::getGameModeManager().getCurrentGameMode();
     if (gamemode) {
         gamemode->invokeOnGameResetFunction();
     }

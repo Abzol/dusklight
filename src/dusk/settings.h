@@ -286,7 +286,7 @@ struct UserSettings {
         ConfigVar<bool> showInputViewer;
         ConfigVar<bool> showInputViewerGyro;
 
-        ConfigVar<std::string> lastSelectedGamemodeId;
+        ConfigVar<std::string> lastSelectedGameModeId;
     } game;
 
     struct {

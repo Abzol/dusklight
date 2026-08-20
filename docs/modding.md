@@ -636,7 +636,7 @@ first in-game frame. Projection matrices match the renderer's WebGPU clip conven
 Camera operators allow overriding the main camera. When an operator callback returns true, its values replace the camera
 state for the current frame. Register and unregister using `register_camera_operator` / `unregister_camera_operator`.
 
-### GamemodeService (`mods/svc/gamemode.h`)
+### GameModeService (`mods/svc/gamemode.h`)
 
 Allows a mod to register a gamemode that allows the game to designate one form of gameplay (named a gamemode). This
 is intended to allow large mods that change large amounts of game logic (such as a randomizer) to have explicit control
@@ -651,7 +651,7 @@ Note: for any gamemode wishing to use the vanilla set of savefiles, use `gczelda
 // An example that shows registering a gamemode with function hooks that are scoped to the gamemode being active
 IMPORT_SERVICE(LogService, svc_log);
 IMPORT_SERVICE(HookService, svc_hook);
-IMPORT_SERVICE(GamemodeService, svc_gamemode);
+IMPORT_SERVICE(GameModeService, svc_gamemode);
 
 #define MY_GAMEMODE_ID "gamemodeid"
 
@@ -665,7 +665,7 @@ static HookAction myFunctionHook(ModContext *ctx, void *args, void *, void *) {
 
 DEFINE_HOOK(fopAcM_createItem, CreateItem);
 
-void onGamemodeActivated() {
+void onGameModeActivated() {
     // Setup the gamemode, Add any hooks that are gamemode specific
     // Overlay any files that are gamemode specific
     ModResult result = mods::hook_add_pre<CreateItem>(svc_hook, myFunctionHook);
@@ -674,7 +674,7 @@ void onGamemodeActivated() {
     }     
 }
 
-void onGamemodeDeactivated() {
+void onGameModeDeactivated() {
     // Uninstall any hooks that are gamemode specific
     // Remove overlays to any files that are gamemode specific
     ModResult result = mods::hook_uninstall<CreateItem>();
@@ -688,14 +688,14 @@ void onSaveLoaded() {
 }
 
 // Register the gamemode when the mod is initialized
-const GamemodeDesc gamemodeDesc = {
+const GameModeDesc gamemodeDesc = {
     .gamemodeId = MY_GAMEMODE_ID,
-    .fullName = "Gamemode Name",
+    .fullName = "GameMode Name",
     // The save name should be something that other gamemodes will not try to use, so appending your name to it
     // is reccomended. Note: it is limited to 31 characters long
     .saveName = "my-unique-save_developer-name",
-    .onActivatedFunction = onGamemodeActivated, // Called when the gamemode is selected on the prelaunch menu (or is launched)
-    .onDeactivatedFunction = onGamemodeDeactivated, // Called when the gamemode is deselected on the prelaunch menu (or the mod is disabled)
+    .onActivatedFunction = onGameModeActivated, // Called when the gamemode is selected on the prelaunch menu (or is launched)
+    .onDeactivatedFunction = onGameModeDeactivated, // Called when the gamemode is deselected on the prelaunch menu (or the mod is disabled)
     .onPlayFunction = nullptr, // Called when "Play" is pressed on the prelaunch menu
     .onSaveLoadedFunction = onSaveLoaded, // Called when a save is loaded
     .onNewSaveFunction = nullptr, // Called after a new savefile is created
@@ -710,7 +710,7 @@ Within the gamemode service, a gamemode can also request to load a UI for per-sa
 create a new file is pressed.
 
 ```cpp
-IMPORT_SERVICE(GamemodeService, svc_gamemode);
+IMPORT_SERVICE(GameModeService, svc_gamemode);
 IMPORT_SERVICE(UiService, svc_ui);
 
 void onNewSaveSelect(bool *out_proceedToNameSelect, bool *out_returnToFileSelect) {
@@ -753,9 +753,9 @@ void onNewSaveSelect(bool *out_proceedToNameSelect, bool *out_returnToFileSelect
     svc_ui->window_push(mod_ctx, &desc, &windowHandle);
 }
 
-const GamemodeDesc gamemodeDesc = {
+const GameModeDesc gamemodeDesc = {
     .gamemodeId = "my-gamemode-id",
-    .fullName = "My Gamemode",
+    .fullName = "My GameMode",
     .saveName = "my-gamemode-save",
     .onNewSaveSelectFunction = onNewSaveSelect,
 };

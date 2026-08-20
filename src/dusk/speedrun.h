@@ -5,7 +5,7 @@
 
 namespace dusk::speedrun {
 
-constexpr const char* kSpeedrunGamemodeId = "vanilla_speedrun";
+constexpr const char* kSpeedrunGameModeId = "vanilla_speedrun";
 
 struct SpeedrunInfo {
 
@@ -47,13 +47,13 @@ struct SpeedrunInfo {
 
 extern SpeedrunInfo g_speedrunInfo;
 
-void registerSpeedrunGamemode();
-void unregisterSpeedrunGamemode();
+void registerSpeedrunGameMode();
+void unregisterSpeedrunGameMode();
 void resetForSpeedrunMode();
 void restoreFromSpeedrunMode();
 
 inline bool isActive() {
-    return dusk::gamemode::getGamemodeManager().isCurrentGamemode(kSpeedrunGamemodeId);
+    return dusk::gamemode::getGameModeManager().isCurrentGameMode(kSpeedrunGameModeId);
 }
 
 }  // namespace dusk

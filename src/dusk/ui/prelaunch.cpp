@@ -766,10 +766,10 @@ static std::string get_playbutton_text() {
         return "Select Disc Image";
     }
     std::string playText;
-    const dusk::gamemode::Gamemode* currentGameMode =
-        dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+    const dusk::gamemode::GameMode* currentGameMode =
+        dusk::gamemode::getGameModeManager().getCurrentGameMode();
     if (currentGameMode != nullptr) {
-        return currentGameMode->getId() == dusk::gamemode::kVanillaGamemodeId ? "Play" :
+        return currentGameMode->getId() == dusk::gamemode::kVanillaGameModeId ? "Play" :
                                                        "Play " + currentGameMode->getFullName();
     }
     return "Play";
@@ -821,7 +821,7 @@ Prelaunch::Prelaunch() : Document(kDocumentSource, false, DocumentScope::Prelaun
 void Prelaunch::build_menu_buttons() {
     if (auto* menuList = mDocument->GetElementById("menu-list")) {
         // Set the gamemode to the last used before showing the play button
-        dusk::gamemode::getGamemodeManager().setGamemodeToPrevious();
+        dusk::gamemode::getGameModeManager().setGameModeToPrevious();
 
         mMenuButtons.push_back(std::make_unique<Button>(menuList, get_playbutton_text()));
         mMenuButtons.back()->on_pressed([this] {
@@ -846,8 +846,8 @@ void Prelaunch::build_menu_buttons() {
             }
 
             prelaunch_state().firstLaunch = false;
-            const dusk::gamemode::Gamemode* gamemode =
-                dusk::gamemode::getGamemodeManager().getCurrentGamemode();
+            const dusk::gamemode::GameMode* gamemode =
+                dusk::gamemode::getGameModeManager().getCurrentGameMode();
             if (gamemode) {
                 gamemode->invokeOnPlayFunction();
             }
@@ -873,28 +873,28 @@ void Prelaunch::build_menu_buttons() {
 
         // If we have more gamemodes registered than the default vanilla, show the gamemode
         // selection
-        if (dusk::gamemode::getGamemodeManager().getRegisteredGamemodes().size() > 1) {
-            mMenuButtons.push_back(std::make_unique<Button>(menuList, "Select Gamemode"));
+        if (dusk::gamemode::getGameModeManager().getRegisteredGameModes().size() > 1) {
+            mMenuButtons.push_back(std::make_unique<Button>(menuList, "Select GameMode"));
             mMenuButtons.back()->on_pressed([this] {
                 std::vector<ModalAction> gamemodeActions;
                 gamemodeActions.push_back(dusk::ui::ModalAction{
                     .label = "Vanilla", .onPressed = [this](dusk::ui::Modal& modal) {
                         mDoAud_seStartMenu(kSoundClick);
-                        dusk::gamemode::getGamemodeManager().setCurrentGamemode(dusk::gamemode::kVanillaGamemodeId);
+                        dusk::gamemode::getGameModeManager().setCurrentGameMode(dusk::gamemode::kVanillaGameModeId);
                         modal.pop();
                         update();
                     }});
                 for (const auto& [id, gamemode] :
-                    dusk::gamemode::getGamemodeManager().getRegisteredGamemodes())
+                    dusk::gamemode::getGameModeManager().getRegisteredGameModes())
                 {
-                    if (id == dusk::gamemode::kVanillaGamemodeId) {
+                    if (id == dusk::gamemode::kVanillaGameModeId) {
                         // Force vanilla to the top
                         continue;
                     }
                     gamemodeActions.push_back(dusk::ui::ModalAction{.label = gamemode.getFullName(),
                         .onPressed = [this, id](dusk::ui::Modal& modal) {
                             mDoAud_seStartMenu(kSoundClick);
-                            dusk::gamemode::getGamemodeManager().setCurrentGamemode(id);
+                            dusk::gamemode::getGameModeManager().setCurrentGameMode(id);
                             modal.pop();
                             update();
                         }});

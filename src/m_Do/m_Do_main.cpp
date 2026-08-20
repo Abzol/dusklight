@@ -922,7 +922,7 @@ int game_main(int argc, char* argv[]) {
     // Apply after aurora_initialize: speedrun mode mutates cvars whose change callbacks push
     // values into aurora.
     if (dusk::getSettings().game.speedrunMode) {
-        dusk::speedrun::registerSpeedrunGamemode();
+        dusk::speedrun::registerSpeedrunGameMode();
     }
 
     if (parsed_arg_options.contains("mods") &&
@@ -938,7 +938,7 @@ int game_main(int argc, char* argv[]) {
     }
 
     if (skipPreLaunchUI == true) {
-        if (dusk::gamemode::getGamemodeManager().getRegisteredGamemodes().size() > 1 && dusk::getSettings().backend.skipPreLaunchUI.getValue()) {
+        if (dusk::gamemode::getGameModeManager().getRegisteredGameModes().size() > 1 && dusk::getSettings().backend.skipPreLaunchUI.getValue()) {
             // Force pre-launch if we have registered gamemodes that we need to choose from
             dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
         } else {
