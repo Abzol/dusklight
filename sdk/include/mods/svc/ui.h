@@ -293,7 +293,7 @@ typedef struct UiService {
     ModResult (*push_toast)(ModContext* ctx, const UiToastDesc* desc);
 
     /* Minor version 2 */
-    ModResult (*get_clipboard_text)(ModContext* ctx, char* out_text, size_t max_length);
+    ModResult (*get_clipboard_text)(ModContext* ctx, char* buffer, size_t bufferSize, size_t* outLength);
     ModResult (*set_clipboard_text)(ModContext* ctx, const char* text);
 } UiService;
 
