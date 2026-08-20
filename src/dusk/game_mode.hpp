@@ -1,6 +1,7 @@
 #pragma once
 
 #include "d/d_file_select.h"
+#include "mods/svc/game_mode.h"
 
 #include <functional>
 #include <map>
@@ -16,6 +17,9 @@ constexpr const char* kDefaultGameModeSaveName = "gczelda2";
 // Holds a game mode definition and its lifecycle callbacks.
 class GameMode {
 public:
+    using Callback = std::function<bool()>;
+    using NewSaveSelectCallback = std::function<bool(GameModeNewSaveState* state)>;
+
     GameMode(GameModeId id, std::string fullName, std::string saveName = {})
         : mId{std::move(id)}, mFullName{std::move(fullName)},
           mSaveName{saveName.empty() ? kDefaultGameModeSaveName : std::move(saveName)} {}
@@ -27,66 +31,76 @@ public:
     std::string mFullName;
     std::string mSaveName;
 
-    void invokeOnActivatedFunction() const {
+    bool invokeOnActivatedFunction() const {
         if (mOnActivatedFunction) {
-            mOnActivatedFunction();
+            return mOnActivatedFunction();
         }
+        return true;
     }
 
-    void invokeOnDeactivatedFunction() const {
+    bool invokeOnDeactivatedFunction() const {
         if (mOnDeactivatedFunction) {
-            mOnDeactivatedFunction();
+            return mOnDeactivatedFunction();
         }
+        return true;
     }
 
-    void invokeOnPlayFunction() const {
+    bool invokeOnPlayFunction() const {
         if (mOnPlayFunction) {
-            mOnPlayFunction();
+            return mOnPlayFunction();
         }
+        return true;
     }
 
-    void invokeOnSaveLoadedFunction() const {
+    bool invokeOnSaveLoadedFunction() const {
         if (mOnSaveLoadedFunction) {
-            mOnSaveLoadedFunction();
+            return mOnSaveLoadedFunction();
         }
+        return true;
     }
 
-    void invokeOnNewSaveFunction() const {
+    bool invokeOnNewSaveFunction() const {
         if (mOnNewSaveFunction) {
-            mOnNewSaveFunction();
+            return mOnNewSaveFunction();
         }
+        return true;
     }
 
-    void invokeOnNewSaveSelectFunction(
-        bool* out_proceedToNameSelect, bool* out_returnToFileSelect) const {
+    bool invokeOnNewSaveSelectFunction(GameModeNewSaveState* state) const {
+        *state = GAME_MODE_STATE_PENDING;
         if (mOnNewSaveSelectFunction) {
-            mOnNewSaveSelectFunction(out_proceedToNameSelect, out_returnToFileSelect);
-        } else {
-            *out_proceedToNameSelect = true;
+            if (mOnNewSaveSelectFunction(state)) {
+                return true;
+            }
+            *state = GAME_MODE_STATE_RETURN;
+            return false;
         }
+        *state = GAME_MODE_STATE_PROCEED;
+        return true;
     }
 
-    void invokeOnGameResetFunction() const {
+    bool invokeOnGameResetFunction() const {
         if (mOnGameResetFunction) {
-            mOnGameResetFunction();
+            return mOnGameResetFunction();
         }
+        return true;
     }
 
-    void invokeOnTickFunction() const {
+    bool invokeOnTickFunction() const {
         if (mOnTickFunction) {
-            mOnTickFunction();
+            return mOnTickFunction();
         }
+        return true;
     }
 
-    std::function<void()> mOnActivatedFunction;
-    std::function<void()> mOnDeactivatedFunction;
-    std::function<void()> mOnPlayFunction;
-    std::function<void()> mOnSaveLoadedFunction;
-    std::function<void()> mOnNewSaveFunction;
-    std::function<void(bool* out_proceedToNameSelect, bool* out_returnToFileSelect)>
-        mOnNewSaveSelectFunction;
-    std::function<void()> mOnGameResetFunction;
-    std::function<void()> mOnTickFunction;
+    Callback mOnActivatedFunction;
+    Callback mOnDeactivatedFunction;
+    Callback mOnPlayFunction;
+    Callback mOnSaveLoadedFunction;
+    Callback mOnNewSaveFunction;
+    NewSaveSelectCallback mOnNewSaveSelectFunction;
+    Callback mOnGameResetFunction;
+    Callback mOnTickFunction;
 };
 
 class GameModeManager {
@@ -107,7 +121,7 @@ public:
         }
         return false;
     }
-    void setCurrentGameMode(const GameModeId& id);
+    bool setCurrentGameMode(const GameModeId& id);
     void setGameModeToPrevious();
 
     const std::map<GameModeId, GameMode>& getRegisteredGameModes() const {

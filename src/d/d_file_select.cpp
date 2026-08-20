@@ -1320,21 +1320,19 @@ void dFile_select_c::selectDataNameMove() {
     if (gameMode) {
         if (isHeaderTxtChange == true && isFileRecScale == true && isModoruTxtDisp == true) {
             if (mGameModeSaveStartBuildUi) {
-                gameMode->invokeOnNewSaveSelectFunction(
-                    &mGameModeProceedToNameSelect, &mGameModeReturnToFileSelect);
+                gameMode->invokeOnNewSaveSelectFunction(&mGameModeNewSaveState);
                 mGameModeSaveStartBuildUi = false;
             }
-            if (mGameModeReturnToFileSelect) {
+            if (mGameModeNewSaveState == GAME_MODE_STATE_RETURN) {
                 backToDataSelectMove();
                 mGameModeSaveStartBuildUi = true;
-                mGameModeProceedToNameSelect = false;
-                mGameModeReturnToFileSelect = false;
+                mGameModeNewSaveState = GAME_MODE_STATE_PENDING;
                 return;
             }
-            if (!mGameModeProceedToNameSelect) {
+            if (mGameModeNewSaveState != GAME_MODE_STATE_PROCEED) {
                 return;
             }
-        }else {
+        } else {
             return;
         }
     }
@@ -1347,8 +1345,7 @@ void dFile_select_c::selectDataNameMove() {
     {
 #ifdef TARGET_PC
         mGameModeSaveStartBuildUi = true;
-        mGameModeProceedToNameSelect = false;
-        mGameModeReturnToFileSelect = false;
+        mGameModeNewSaveState = GAME_MODE_STATE_PENDING;
 #endif
         mDataSelProc = DATASELPROC_NAME_INPUT_WAIT;
     }

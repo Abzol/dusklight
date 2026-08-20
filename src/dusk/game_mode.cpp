@@ -62,27 +62,36 @@ void GameModeManager::unregisterGameMode(const GameModeId& gameModeId) {
     ui::Prelaunch::refresh_menu_buttons();
 }
 
-void GameModeManager::setCurrentGameMode(const GameModeId& id) {
+bool GameModeManager::setCurrentGameMode(const GameModeId& id) {
     if (mCurrentGameModeId == id) {
-        return;
+        return true;
     }
     if (!mRegisteredGameModes.contains(id)) {
         Log.warn("Attempting to configure unknown game mode {}", id);
-        return;
+        return false;
     }
     const GameMode* currentGameMode = getCurrentGameMode();
     if (currentGameMode) {
         currentGameMode->invokeOnDeactivatedFunction();
     }
     mCurrentGameModeId = id;
-    getSettings().game.lastSelectedGameModeId.setValue(id);
-    config::save();
 
     currentGameMode = getCurrentGameMode();
     if (currentGameMode) {
         mDoMemCd_SetFileName(currentGameMode->getSaveName());
-        currentGameMode->invokeOnActivatedFunction();
+        if (!currentGameMode->invokeOnActivatedFunction()) {
+            mCurrentGameModeId = kVanillaGameModeId;
+            currentGameMode = getCurrentGameMode();
+            mDoMemCd_SetFileName(currentGameMode->getSaveName());
+            currentGameMode->invokeOnActivatedFunction();
+            getSettings().game.lastSelectedGameModeId.setValue(kVanillaGameModeId);
+            config::save();
+            return false;
+        }
     }
+    getSettings().game.lastSelectedGameModeId.setValue(id);
+    config::save();
+    return true;
 }
 
 }  // namespace dusk::gamemode

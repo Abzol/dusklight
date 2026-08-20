@@ -9,6 +9,10 @@
 #include "JSystem/J3DGraphLoader/J3DModelLoader.h"
 #include "JSystem/J3DGraphLoader/J3DAnmLoader.h"
 
+#if TARGET_PC
+#include "mods/svc/game_mode.h"
+#endif
+
 class dFile_info_c;
 class J2DPicture;
 
@@ -741,8 +745,7 @@ public:
 #ifdef TARGET_PC
     dDlst_FileSelFade_c mFadeDlst;
     bool mGameModeSaveStartBuildUi = true;
-    bool mGameModeProceedToNameSelect = false;
-    bool mGameModeReturnToFileSelect = false;
+    GameModeNewSaveState mGameModeNewSaveState = GAME_MODE_STATE_PENDING;
 #endif
 
     #if PLATFORM_WII || PLATFORM_SHIELD

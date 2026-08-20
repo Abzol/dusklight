@@ -22,11 +22,24 @@ static void onSpeedrunModeDeactive() {
 }
 
 void registerSpeedrunGameMode() {
-    dusk::gamemode::GameMode speedrunGameMode(kSpeedrunGameModeId,"Speedrun","gczelda2-speedrun");
-    speedrunGameMode.mOnSaveLoadedFunction = dusk::speedrun::start;
-    speedrunGameMode.mOnActivatedFunction = onSpeedrunModeActive;
-    speedrunGameMode.mOnDeactivatedFunction = onSpeedrunModeDeactive;
-    speedrunGameMode.mOnTickFunction = dusk::speedrun::onGameFrame;
+    dusk::gamemode::GameMode speedrunGameMode{
+        kSpeedrunGameModeId, "Speedrun", "gczelda2-speedrun"};
+    speedrunGameMode.mOnSaveLoadedFunction = [] {
+        dusk::speedrun::start();
+        return true;
+    };
+    speedrunGameMode.mOnActivatedFunction = [] {
+        onSpeedrunModeActive();
+        return true;
+    };
+    speedrunGameMode.mOnDeactivatedFunction = [] {
+        onSpeedrunModeDeactive();
+        return true;
+    };
+    speedrunGameMode.mOnTickFunction = [] {
+        dusk::speedrun::onGameFrame();
+        return true;
+    };
 
     dusk::gamemode::getGameModeManager().registerGameMode(speedrunGameMode);
 }
@@ -72,9 +85,7 @@ void resetForSpeedrunMode() {
 }
 
 static void clearSpeedrunOverrides() {
-    config::EnumerateRegistered([](config::ConfigVarBase& cvar) {
-        cvar.clearSpeedrunOverride();
-    });
+    config::EnumerateRegistered([](config::ConfigVarBase& cvar) { cvar.clearSpeedrunOverride(); });
 }
 
 void restoreFromSpeedrunMode() {
@@ -82,4 +93,4 @@ void restoreFromSpeedrunMode() {
     aurora_set_pause_on_focus_lost(getSettings().game.pauseOnFocusLost.getValue());
 }
 
-}  // namespace dusk
+}  // namespace dusk::speedrun
