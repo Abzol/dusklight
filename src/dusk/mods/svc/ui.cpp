@@ -1053,6 +1053,10 @@ ModResult ui_get_clipboard_text(LoadedMod& mod, char* buffer, size_t bufferSize,
             return MOD_ERROR;
         }
 
+        if (outLength != nullptr) {
+            *outLength = text.size();
+        }
+
         if (bufferSize < text.size() + 1) {
             return MOD_INVALID_ARGUMENT;
         }
