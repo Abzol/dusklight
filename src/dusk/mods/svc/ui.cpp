@@ -1044,29 +1044,28 @@ ModResult ui_get_clipboard_text(LoadedMod& mod, char* buffer, size_t bufferSize,
         *outLength = 0;
     }
 
+    std::string text;
     if (SDL_HasClipboardText()) {
-        char* text_ptr = SDL_GetClipboardText();
-        std::string text = text_ptr ? text_ptr : "";
-        SDL_free(text_ptr);
-
+        char* textPtr = SDL_GetClipboardText();
+        text = textPtr != nullptr ? textPtr : "";
+        SDL_free(textPtr);
         if (text.empty()) {
             return MOD_ERROR;
         }
-
-        if (outLength != nullptr) {
-            *outLength = text.size();
-        }
-
-        if (bufferSize < text.size() + 1) {
-            return MOD_INVALID_ARGUMENT;
-        }
-
-        memcpy(buffer, text.c_str(), text.size() + 1);
-        buffer[text.size()] = '\0';
-    } else {
-        *buffer = '\0';
     }
 
+    if (outLength != nullptr) {
+        *outLength = text.size();
+    }
+
+    if (buffer == nullptr) {
+        return MOD_OK;
+    }
+    if (bufferSize < text.size() + 1) {
+        return MOD_INVALID_ARGUMENT;
+    }
+
+    memcpy(buffer, text.c_str(), text.size() + 1);
     return MOD_OK;
 }
 
@@ -1410,7 +1409,7 @@ ModResult ui_dialog_add_action(
 
 ModResult ui_get_clipboard_text(ModContext* ctx, char* buffer, size_t bufferSize, size_t* outLength) {
     auto* mod = mod_from_context(ctx);
-    if (mod == nullptr || buffer == nullptr) {
+    if (mod == nullptr || (buffer == nullptr && bufferSize != 0)) {
         return MOD_INVALID_ARGUMENT;
     }
 
