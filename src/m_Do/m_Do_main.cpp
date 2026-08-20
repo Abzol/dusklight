@@ -67,6 +67,7 @@
 #include "dusk/iso_validate.hpp"
 #include "dusk/logging.h"
 #include "dusk/main.h"
+#include "dusk/hq_minimap.hpp"
 #include "dusk/mod_loader.hpp"
 #include "dusk/mods/svc/window.hpp"
 #include "dusk/mouse.h"
@@ -235,7 +236,7 @@ void main01(void) {
 
     OSReport("Entering Main Loop (main01)...\n");
 
-    dusk::game_clock::ensure_initialized();
+    dusk::game_clock::initialize();
 
     do {
         // 1. Update Window Events
@@ -250,7 +251,7 @@ void main01(void) {
                 break;
             case AURORA_UNPAUSED:
                 dusk::audio::SetPaused(false);
-                dusk::game_clock::reset_frame_timer();
+                dusk::game_clock::reset();
                 dusk::mouse::on_focus_gained();
                 break;
             case AURORA_SDL_EVENT:
@@ -292,17 +293,20 @@ void main01(void) {
 
         dusk::ui::update();
 
-        const auto pacing = dusk::game_clock::advance_main_loop();
-        if (pacing.is_interpolating) {
-            if (pacing.sim_ticks_to_run > 0) {
-                dusk::frame_interp::begin_frame(dusk::getSettings().game.enableFrameInterpolation, true, 0.0f);
+        const auto timing = dusk::game_clock::advance();
+        const auto interpolationMode = dusk::getSettings().game.enableFrameInterpolation.getValue();
+        if (timing.separatePresentation) {
+            if (timing.numSimTicks > 0) {
+                dusk::frame_interp::begin_frame(interpolationMode, true, 0.0f);
                 dusk::frame_interp::set_ui_tick_pending(true);
-
-                for (int sim_tick = 0; sim_tick < pacing.sim_ticks_to_run; ++sim_tick) {
-                    dusk::frame_interp::begin_sim_tick();
+                for (int i = 0; i < timing.numSimTicks; ++i) {
+                    if (timing.interpolating) {
+                        dusk::frame_interp::begin_sim_tick();
+                    }
+                    dusk::game_clock::begin_sim_tick();
                     mDoCPd_c::read();
                     dusk::mouse::read();
-                    dusk::gyro::read(pacing.sim_pace);
+                    dusk::gyro::read(dusk::game_clock::kSimPeriod);
                     dusk::processGameCombos();
                     fapGm_Execute();
                     dusk::processCameraCommands();
@@ -311,31 +315,38 @@ void main01(void) {
                 }
             }
 
-            dusk::frame_interp::begin_frame(dusk::getSettings().game.enableFrameInterpolation, false,
-                                            dusk::game_clock::sample_interpolation_step());
-            dusk::frame_interp::interpolate();
-            dusk::frame_interp::begin_presentation_camera();
-            // run draw functions for anything specially marked to handle interp
+            const float interpolationStep =
+                timing.interpolating ? dusk::game_clock::sample_interpolation_step() : 1.0f;
+            dusk::frame_interp::begin_frame(interpolationMode, false, interpolationStep);
+            if (timing.interpolating) {
+                dusk::frame_interp::interpolate();
+                dusk::frame_interp::begin_presentation_camera();
+            }
+
             fpcM_DrawIterater((fpcM_DrawIteraterFunc)fpcM_Draw);
             cAPIGph_Painter();
-            dusk::frame_interp::end_presentation_camera();
+            if (timing.interpolating) {
+                dusk::frame_interp::end_presentation_camera();
+            }
             dusk::frame_interp::set_ui_tick_pending(false);
         } else {
+            dusk::frame_interp::begin_frame(dusk::FrameInterpMode::Off, true, 0.0f);
+            dusk::frame_interp::set_ui_tick_pending(true);
+            dusk::game_clock::begin_sim_tick();
+
             // Game Inputs
             mDoCPd_c::read();
             dusk::mouse::read();
-            dusk::gyro::read(pacing.presentation_dt_seconds);
+            dusk::gyro::read(timing.dt);
             dusk::processGameCombos();
-            dusk::processCameraCommands();
-
-            dusk::frame_interp::begin_frame(dusk::FrameInterpMode::Off, true, 0.0f);
-            dusk::frame_interp::set_ui_tick_pending(true);
 
             // EXECUTE GAME LOGIC & RENDER
             // This calls mDoGph_Painter -> JFWDisplay -> GX Functions
             fapGm_Execute();
+            dusk::processCameraCommands();
 
             mDoAud_Execute();
+            dusk::game_clock::commit_sim_tick();
         }
 
         aurora_end_frame();
@@ -351,7 +362,10 @@ void main01(void) {
         static double last_fps_setting = 0.0;
         static Limiter::duration_t target_ns = 0;
 
-        if (dusk::getSettings().game.enableFrameInterpolation.getValue() == dusk::FrameInterpMode::Capped && !dusk::getTransientSettings().skipFrameRateLimit) {
+        if (dusk::getSettings().game.enableFrameInterpolation.getValue() ==
+                dusk::FrameInterpMode::Capped &&
+            !dusk::getTransientSettings().turboMode)
+        {
             ZoneScopedN("Frame limiter");
             double current_fps = dusk::getSettings().video.maxFrameRate.getValue();
             if (current_fps != last_fps_setting) {
@@ -360,16 +374,8 @@ void main01(void) {
             }
 
             Limiter::duration_t sleepTime = main_loop_limiter.Sleep(target_ns);
-            dusk::frameUsagePct = 100.0f * (1.0f - static_cast<float>(sleepTime) / static_cast<float>(target_ns));
-        } else if (!pacing.is_interpolating && !dusk::getTransientSettings().skipFrameRateLimit) {
-            // Non-interp: throttle display rate to the configured sim rate so /rate works
-            const double sim_fps = static_cast<double>(dusk::game_clock::get_sim_rate());
-            const Limiter::duration_t sim_target_ns = static_cast<Limiter::duration_t>(1'000'000'000.0 / sim_fps);
-            main_loop_limiter.Sleep(sim_target_ns);
-        } else if (dusk::getTransientSettings().skipFrameRateLimit) {
-            // Turbo: cap at 120 hz rather than running fully unlimited
-            constexpr Limiter::duration_t kTurboTargetNs = 1'000'000'000LL / 120LL;
-            main_loop_limiter.Sleep(kTurboTargetNs);
+            dusk::frameUsagePct =
+                100.0f * (1.0f - static_cast<float>(sleepTime) / static_cast<float>(target_ns));
         } else {
             main_loop_limiter.Reset();
         }
@@ -501,6 +507,56 @@ static void LanguageInit() {
 static void log_build_info() {
     DuskLog.info("Build: {} (rev {}, built {}, type {})", BOREALIS_APP_DESCRIBE, BOREALIS_APP_REVISION, BOREALIS_APP_DATE, BOREALIS_BUILD_TYPE);
     DuskLog.info("Platform: {}", BOREALIS_PLATFORM_NAME);
+}
+
+static void mods_init(const std::filesystem::path& mods_dir) {
+    // Mod search directories, highest priority first: user dir (--mods replaces it), then
+    // mods/ next to the app, then install-bundled mods inside the app bundle.
+    {
+        std::vector<dusk::mods::ModSearchDir> modDirs;
+        modDirs.push_back({.path = mods_dir});
+#if TARGET_ANDROID
+        // APK-bundled mods are extracted to internal storage
+        // by DuskActivity before SDL_main runs.
+        modDirs.push_back({
+            .path = dusk::CachePath / "bundled_mods",
+        });
+#elif defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
+        modDirs.push_back({
+            .path = dusk::data::base_path_relative("mods"),
+            .inPlaceNative = true,
+            .nativeLibDir = dusk::data::base_path_relative("Frameworks"),
+        });
+#else
+#if defined(__APPLE__)
+        // Base path is Contents/Resources; search up for dev mods
+        // TODO: scope to non-CI builds
+        modDirs.push_back({
+            .path = dusk::data::base_path_relative("../../../mods").lexically_normal(),
+            .inPlaceNative = true,
+        });
+        // Contents/Resources/mods
+        modDirs.push_back({
+            .path = dusk::data::base_path_relative("mods"),
+            .inPlaceNative = true,
+        });
+#else
+        modDirs.push_back({
+            .path = dusk::data::base_path_relative("mods"),
+            .inPlaceNative = true,
+        });
+#endif
+#endif
+        dusk::mods::ModLoader::instance().set_search_dirs(std::move(modDirs));
+    }
+#if TARGET_ANDROID
+    // A user-relocated data dir can live on external storage, which is mounted noexec.
+    // Native mod libraries must be extracted to internal storage.
+    dusk::mods::ModLoader::instance().set_cache_dir(dusk::CachePath / "mod_cache");
+#endif
+
+    DuskLog.info("Initializing mods...");
+    dusk::mods::ModLoader::instance().init();
 }
 
 // =========================================================================
@@ -676,12 +732,6 @@ int game_main(int argc, char* argv[]) {
 
     dusk::presentation::update_frame_rate_preference();
 
-    // Apply after aurora_initialize: speedrun mode mutates cvars whose change callbacks push
-    // values into aurora.
-    if (dusk::getSettings().game.speedrunMode) {
-        dusk::resetForSpeedrunMode();
-    }
-
 #if BOREALIS_HAS_DISCORD
     if (dusk::getSettings().game.enableDiscordPresence) {
         dusk::discord::initialize();
@@ -727,6 +777,10 @@ int game_main(int argc, char* argv[]) {
         return 0;
     }
 
+    if (dusk::getSettings().game.enableHighQualityMinimapTextures.getValue()) {
+        dusk::hq_minimap::set_active(true);
+    }
+
     dusk::texture_replacements::reload();
     dusk::ui::initialize();
     dusk::ui::push_document(std::make_unique<dusk::ui::Overlay>(), true, true);
@@ -750,6 +804,8 @@ int game_main(int argc, char* argv[]) {
         saveConfigBeforePrelaunch = true;
     }
 
+    bool skipPreLaunchUI = dusk::getSettings().backend.skipPreLaunchUI.getValue();
+
     std::string dvd_path = dusk::getSettings().backend.isoPath;
     bool dvd_opened = false;
     if (parsed_arg_options.count("dvd")) {
@@ -766,14 +822,13 @@ int game_main(int argc, char* argv[]) {
                     dusk::DiscVerificationState::Unknown);
                 dusk::config::save();
                 dusk::IsGameLaunched = true;
+                skipPreLaunchUI = true;
             }
         } else {
             DuskLog.warn("DVD image from command line failed validation: {}, opening prelaunch UI", dvd_path);
             forcePreLaunchUI = true;
         }
     }
-
-    bool skipPreLaunchUI = dusk::getSettings().backend.skipPreLaunchUI.getValue();
 
     // If we can't load right into the game, stop requesting to load a stage or save
     if (forcePreLaunchUI || dvd_path.empty()) {
@@ -793,6 +848,16 @@ int game_main(int argc, char* argv[]) {
         dusk::getSettings().backend.isoPath.getValue(),
         dusk::getSettings().backend.isoVerification.getValue());
 
+    bool showPrelaunchAfterInit = true;
+    if (!dvd_opened && (dusk::getSettings().backend.isoPath.getValue().empty() || (forcePreLaunchUI && skipPreLaunchUI))) {
+        showPrelaunchAfterInit = false;
+    }
+
+    if (showPrelaunchAfterInit) {
+        // Force launchUILoop to not run, we know that the ISO will be loaded.
+        dusk::IsGameLaunched = true;
+    }
+
     if (!dvd_opened) {
         if (dusk::getSettings().backend.isoPath.getValue().empty()) {
             forcePreLaunchUI = true;
@@ -807,7 +872,9 @@ int game_main(int argc, char* argv[]) {
         }
 
         if (!skipPreLaunchUI) {
-            dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
+            if (!showPrelaunchAfterInit) {
+                dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
+            }
 
             // pre game launch ui main loop
             if (!launchUILoop()) {
@@ -841,22 +908,12 @@ int game_main(int argc, char* argv[]) {
         dusk::IsGameLaunched = true;
     }
 
-#if BOREALIS_HAS_SENTRY
-    if (borealis::sentry::get_consent() == borealis::sentry::Consent::Unknown) {
-        dusk::ui::push_document(std::make_unique<dusk::ui::CrashReportWindow>());
-    }
-#endif
-
-    if (!dusk::getSettings().backend.wasPresetChosen) {
-        dusk::ui::push_document(std::make_unique<dusk::ui::PresetWindow>());
-    }
-
     dusk::version::init();
     LanguageInit();
 
     OSInit();
 
-    mDoMain::sPowerOnTime = OSGetTime();
+    mDoMain::sPowerOnTime = DUSK_IF_ELSE(OSGetSystemTime(), OSGetTime());
 
     // Reset Data
     static mDoRstData sResetData = {0};
@@ -869,59 +926,43 @@ int game_main(int argc, char* argv[]) {
 
     mDoDvdThd::SyncWidthSound = false;
 
-    // Mod search directories, highest priority first: user dir (--mods replaces it), then
-    // mods/ next to the app, then install-bundled mods inside the app bundle.
-    {
-        std::vector<dusk::mods::ModSearchDir> modDirs;
-        if (parsed_arg_options.contains("mods") &&
-            !parsed_arg_options["mods"].as<std::string>().empty())
-        {
-            modDirs.push_back({.path = parsed_arg_options["mods"].as<std::string>()});
-        } else {
-            modDirs.push_back({.path = dusk::ConfigPath / "mods"});
-        }
-#if TARGET_ANDROID
-        // APK-bundled mods are extracted to internal storage
-        // by DuskActivity before SDL_main runs.
-        modDirs.push_back({
-            .path = dusk::CachePath / "bundled_mods",
-        });
-#elif defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV)
-        modDirs.push_back({
-            .path = dusk::data::base_path_relative("mods"),
-            .inPlaceNative = true,
-            .nativeLibDir = dusk::data::base_path_relative("Frameworks"),
-        });
-#else
-#if defined(__APPLE__)
-        // Base path is Contents/Resources; search up for dev mods
-        // TODO: scope to non-CI builds
-        modDirs.push_back({
-            .path = dusk::data::base_path_relative("../../../mods").lexically_normal(),
-            .inPlaceNative = true,
-        });
-        // Contents/Resources/mods
-        modDirs.push_back({
-            .path = dusk::data::base_path_relative("mods"),
-            .inPlaceNative = true,
-        });
-#else
-        modDirs.push_back({
-            .path = dusk::data::base_path_relative("mods"),
-            .inPlaceNative = true,
-        });
-#endif
-#endif
-        dusk::mods::ModLoader::instance().set_search_dirs(std::move(modDirs));
+    // Apply after aurora_initialize: speedrun mode mutates cvars whose change callbacks push
+    // values into aurora.
+    if (dusk::getSettings().game.speedrunMode) {
+        dusk::speedrun::registerSpeedrunGameMode();
     }
-#if TARGET_ANDROID
-    // A user-relocated data dir can live on external storage, which is mounted noexec.
-    // Native mod libraries must be extracted to internal storage.
-    dusk::mods::ModLoader::instance().set_cache_dir(dusk::CachePath / "mod_cache");
+
+    if (parsed_arg_options.contains("mods") &&
+            !parsed_arg_options["mods"].as<std::string>().empty())
+    {
+        mods_init(parsed_arg_options["mods"].as<std::string>());
+    } else {
+        mods_init(dusk::ConfigPath / "mods");
+    }
+
+    if (!skipPreLaunchUI && showPrelaunchAfterInit) {
+        dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
+    }
+
+    if (skipPreLaunchUI == true) {
+        if (dusk::gamemode::getGameModeManager().getRegisteredGameModes().size() > 1 && dusk::getSettings().backend.skipPreLaunchUI.getValue()) {
+            // Force pre-launch if we have registered gamemodes that we need to choose from
+            dusk::ui::push_document(std::make_unique<dusk::ui::Prelaunch>(), true);
+        } else {
+            // If we get back to prelaunch later, tell it that we've already started the game
+            dusk::ui::prelaunch_state().firstLaunch = false;
+        }
+    }
+
+#if BOREALIS_HAS_SENTRY
+    if (borealis::sentry::get_consent() == borealis::sentry::Consent::Unknown) {
+        dusk::ui::push_document(std::make_unique<dusk::ui::CrashReportWindow>());
+    }
 #endif
 
-    DuskLog.info("Initializing mods...");
-    dusk::mods::ModLoader::instance().init();
+    if (!dusk::getSettings().backend.wasPresetChosen) {
+        dusk::ui::push_document(std::make_unique<dusk::ui::PresetWindow>());
+    }
 
     OSReport("Starting main01 (Game Loop)...\n");
 

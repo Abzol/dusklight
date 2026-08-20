@@ -245,7 +245,7 @@ void processCameraCommands() {
         eye    = s_cameraFly.endEye;
         center = s_cameraFly.endCenter;
     } else {
-        s_cameraFly.elapsed += dusk::game_clock::sim_pace();
+        s_cameraFly.elapsed += dusk::game_clock::kSimPeriod;
         const float t = smoothstep(s_cameraFly.elapsed / s_cameraFly.duration);
         eye    = s_cameraFly.startEye    + (s_cameraFly.endEye    - s_cameraFly.startEye)    * t;
         center = s_cameraFly.startCenter + (s_cameraFly.endCenter - s_cameraFly.startCenter) * t;
@@ -859,7 +859,7 @@ void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutp
         output("killall <id|name>                           Delete all actors of a type");
         output("list [id|name]                              List actors in scene");
         output("pos                                         Print player position and stage");
-        output("rate [hz]                                   Get or set sim rate (1-1000, default 30)");
+        output("rate [hz]                                   Get or set sim rate (1-480, default 30)");
         output("reset                                       Soft reset");
         output("rupees [amount]                             Get or set rupee count");
         output("spawn <id|name> [params] [x y z] [angle]    Spawn actor");
