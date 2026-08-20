@@ -3,8 +3,9 @@
 #include "document.hpp"
 #include "dusk/commands.hpp"
 
+#include <chrono>
+#include <deque>
 #include <string>
-#include <vector>
 
 namespace Rml {
 class ElementFormControlInput;
@@ -20,36 +21,48 @@ public:
     void show() override;
     bool focus() override;
     void hide(bool close) override;
+    bool visible() const override;
+    bool active() const override;
+    bool permanent() const override { return true; }
+
+    bool input_active() const { return mInputActive; }
 
 private:
-    struct OutputLine {
+    struct MessageLine {
         std::string text;
-        float remain;
+        Rml::Element* element = nullptr;
+        clock::time_point fadeAt;
+        clock::time_point hideAt;
+        bool fading = false;
+        bool expired = false;
     };
 
-    static constexpr float kDurationNormal = 6.0f;
-    static constexpr float kFadeSeconds = 0.8f;
-    static constexpr int kMaxStoredLines = 64;
-    static constexpr int kMaxVisibleLines = 24;
-    static constexpr int kMaxMsgHistory = 500;
+    static constexpr auto kMessageDuration = std::chrono::seconds{6};
+    static constexpr auto kFadeDuration = std::chrono::milliseconds{800};
+    static constexpr std::size_t kMaxVisibleLines = 24;
+    static constexpr std::size_t kMaxMessageHistory = 500;
 
     Rml::Element* mConsole = nullptr;
     Rml::Element* mOutput = nullptr;
     Rml::ElementFormControlInput* mInput = nullptr;
 
-    std::vector<OutputLine> mOutputLines;
-    std::vector<std::string> mMsgHistory;
+    std::deque<MessageLine> mMessages;
     int mHistoryPos = -1;
     bool mInputActive = false;
-    bool mScrollToBottom = false;
+    bool mStickToBottom = true;
 
     CommandState mState;
 
     bool handle_nav_command(Rml::Event& event, NavCommand cmd) override;
 
-    void ConsolePrint(std::string text);
-    void executeFromInput();
-    void navigateHistory(int dir);
+    void append_message(std::string text);
+    void close_input();
+    void execute_from_input();
+    bool has_onscreen_messages() const;
+    void limit_visible_messages();
+    void navigate_history(int direction);
+    void scroll_messages(int pages);
+    void update_message_lifetimes();
 };
 
 }  // namespace dusk::ui

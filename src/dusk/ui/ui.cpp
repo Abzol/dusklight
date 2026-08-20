@@ -69,6 +69,7 @@ void restyle_scope(DocumentScope scope) {
 
 std::deque<Toast> sToasts;
 bool sMenuNotificationRequested = false;
+bool sConsoleShortcutHeld = false;
 
 // Sometimes gamepads can connect and disconnect quickly, especially during
 // connection negotiation. In this case, we'll receive an _ADDED event for a
@@ -107,6 +108,7 @@ void shutdown() noexcept {
     sDocumentStack.clear();
     sPassiveDocuments.clear();
     sConnectedGamepads.clear();
+    sConsoleShortcutHeld = false;
     input::reset_input_state();
     input::release_input_block();
     sInitialized = false;
@@ -216,20 +218,29 @@ void handle_event(const SDL_Event& event) noexcept {
         }
         sConnectedGamepads.erase(event.gdevice.which);
     }
-    input::handle_event(event);
-    // TODO: don't overlap with PAD bindings?
-    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_SLASH) {
-        bool found = false;
-        for (auto& doc : sDocumentStack) {
-            if (auto* console = dynamic_cast<CommandConsole*>(doc.get())) {
-                console->show();
-                found = true;
-            }
+    if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST) {
+        sConsoleShortcutHeld = false;
+    }
+    if (event.type == SDL_EVENT_KEY_UP && event.key.key == SDLK_SLASH && sConsoleShortcutHeld) {
+        sConsoleShortcutHeld = false;
+        return;
+    }
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_SLASH &&
+        getSettings().backend.enableAdvancedSettings)
+    {
+        auto* console = static_cast<CommandConsole*>(find_document(DocumentScope::CommandConsole));
+        if (sConsoleShortcutHeld) {
+            return;
         }
-        if (!found) {
-            push_document(std::make_unique<CommandConsole>(), true, false);
+        if (console != nullptr && !console->input_active() && !event.key.repeat) {
+            sConsoleShortcutHeld = true;
+            bring_document_to_front(*console);
+            console->show();
+            input::sync_input_block();
+            return;
         }
     }
+    input::handle_event(event);
 }
 
 bool register_scoped_styles(DocumentScope scope, std::string id, const std::string& rcss) noexcept {
@@ -274,6 +285,17 @@ Document& push_document(std::unique_ptr<Document> doc, bool show, bool passive) 
     return ret;
 }
 
+void bring_document_to_front(Document& doc) noexcept {
+    const auto it = std::ranges::find_if(
+        sDocumentStack, [&doc](const auto& entry) { return entry.get() == &doc; });
+    if (it == sDocumentStack.end() || std::next(it) == sDocumentStack.end()) {
+        return;
+    }
+    auto entry = std::move(*it);
+    sDocumentStack.erase(it);
+    sDocumentStack.push_back(std::move(entry));
+}
+
 void uncover_top_document() noexcept {
     if (auto* doc = top_document()) {
         doc->uncover();
@@ -290,10 +312,10 @@ Document* find_document(DocumentScope scope) noexcept {
     return nullptr;
 }
 
-void close_documents_except(DocumentScope scope) noexcept {
+void close_all_documents() noexcept {
     for (auto& doc : sDocumentStack) {
-        if (!doc->closed() && doc->scope() != scope) {
-            doc->force_hide(true);
+        if (!doc->closed()) {
+            doc->force_hide(!doc->permanent());
         }
     }
     input::sync_input_block();

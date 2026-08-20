@@ -2,9 +2,7 @@
 
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/Elements/ElementFormControlInput.h>
-#include <SDL3/SDL_keyboard.h>
 #include <aurora/rmlui.hpp>
-#include <imgui.h>
 
 #include "dusk/settings.h"
 
@@ -12,13 +10,12 @@
 #include <string>
 #include <string_view>
 
-#include "fmt/format.h"
 #include "ui.hpp"
 
 namespace dusk::ui {
 namespace {
 
-static const Rml::String kDocumentSource = R"RML(
+const Rml::String kDocumentSource = R"RML(
 <rml>
 <head>
     <link type="text/rcss" href="res/rml/command_console.rcss" />
@@ -32,13 +29,13 @@ static const Rml::String kDocumentSource = R"RML(
 </rml>
 )RML";
 
-static bool isCommand(std::string_view text) {
+bool is_command(std::string_view text) {
     return text.size() >= 2 && text[0] == '>' && text[1] == ' ';
 }
 
 }  // namespace
 
-CommandConsole::CommandConsole() : Document(kDocumentSource) {
+CommandConsole::CommandConsole() : Document(kDocumentSource, false, DocumentScope::CommandConsole) {
     mConsole = mDocument ? mDocument->GetElementById("console") : nullptr;
     mOutput = mDocument ? mDocument->GetElementById("console-output") : nullptr;
     auto* rawInput = mDocument ? mDocument->GetElementById("console-input") : nullptr;
@@ -50,22 +47,35 @@ CommandConsole::CommandConsole() : Document(kDocumentSource) {
             if (!mInputActive) {
                 return;
             }
-            const auto key = static_cast<Rml::Input::KeyIdentifier>(event.GetParameter<int>("key_identifier", Rml::Input::KI_UNKNOWN));
+            const auto key = static_cast<Rml::Input::KeyIdentifier>(
+                event.GetParameter<int>("key_identifier", Rml::Input::KI_UNKNOWN));
             if (key == Rml::Input::KI_RETURN) {
-                executeFromInput();
+                execute_from_input();
                 event.StopImmediatePropagation();
             } else if (key == Rml::Input::KI_ESCAPE) {
-                hide(true);
+                hide(false);
                 event.StopImmediatePropagation();
             } else if (key == Rml::Input::KI_UP) {
-                navigateHistory(-1);
+                navigate_history(-1);
                 event.StopImmediatePropagation();
             } else if (key == Rml::Input::KI_DOWN) {
-                navigateHistory(+1);
+                navigate_history(1);
+                event.StopImmediatePropagation();
+            } else if (key == Rml::Input::KI_PRIOR) {
+                scroll_messages(-1);
+                event.StopImmediatePropagation();
+            } else if (key == Rml::Input::KI_NEXT) {
+                scroll_messages(1);
                 event.StopImmediatePropagation();
             }
         },
         true);
+
+    listen(mOutput, Rml::EventId::Scroll, [this](Rml::Event&) {
+        const float bottom =
+            std::max(0.0f, mOutput->GetScrollHeight() - mOutput->GetClientHeight());
+        mStickToBottom = mOutput->GetScrollTop() >= bottom - 4.0f;
+    });
 }
 
 bool CommandConsole::handle_nav_command(Rml::Event&, NavCommand) {
@@ -73,69 +83,48 @@ bool CommandConsole::handle_nav_command(Rml::Event&, NavCommand) {
 }
 
 void CommandConsole::update() {
-    if (!getSettings().backend.enableAdvancedSettings) {
+    if (!getSettings().backend.enableAdvancedSettings || is_prelaunch_open()) {
+        close_input();
+        Document::hide(false);
         return;
     }
 
-    const float dt = std::max(ImGui::GetIO().DeltaTime, 0.0f);
-    for (auto& line : mOutputLines) {
-        line.remain -= dt;
-    }
-    const auto [first, last] =
-        std::ranges::remove_if(mOutputLines, [](const OutputLine& l) { return l.remain <= 0.0f; });
-    mOutputLines.erase(first, last);
-
-    if (mOutputLines.empty() && !mInputActive) {
-        Document::hide(mPendingClose);
+    update_message_lifetimes();
+    if (!mInputActive && !has_onscreen_messages()) {
+        Document::hide(false);
         return;
     }
 
-    if (mOutput == nullptr) {
-        return;
+    if (!Document::visible()) {
+        Document::show();
     }
-
-    Rml::String html;
-    if (mInputActive) {
-        for (const auto& msg : mMsgHistory) {
-            html += isCommand(msg) ? "<line class=\"cmd\">" + escape(msg) + "</line>" : "<line>" + escape(msg) + "</line>";
-        }
-        mOutput->SetAttribute("open", "");
-    } else {
-        const int total = (int)mOutputLines.size();
-        const int startIdx = std::max(0, total - kMaxVisibleLines);
-        for (int i = startIdx; i < total; ++i) {
-            const auto& line = mOutputLines[i];
-            const float alpha = line.remain < kFadeSeconds ? line.remain / kFadeSeconds : 1.0f;
-            const Rml::String cls = isCommand(line.text) ? " class=\"cmd\"" : "";
-            html += fmt::format(FMT_STRING("<line{} style=\"opacity: {:.3f}\">{}</line>"), cls,
-                alpha, escape(line.text));
-        }
-        mOutput->RemoveAttribute("open");
-    }
-
-    mOutput->SetInnerRML(html);
-
-    if (mScrollToBottom && mInputActive) {
-        mOutput->SetScrollTop(1e9f);
-        mScrollToBottom = false;
+    if (mInputActive && mStickToBottom && mOutput != nullptr) {
+        mOutput->SetScrollTop(mOutput->GetScrollHeight() - mOutput->GetClientHeight());
     }
 }
 
 void CommandConsole::show() {
-    if (mDocument != nullptr) {
-        mDocument->Show(Rml::ModalFlag::None, Rml::FocusFlag::None, Rml::ScrollFlag::None);
+    if (mInputActive || !getSettings().backend.enableAdvancedSettings || is_prelaunch_open()) {
+        return;
     }
     mInputActive = true;
-    mScrollToBottom = true;
+    mHistoryPos = -1;
+    mStickToBottom = true;
     if (mConsole != nullptr) {
         mConsole->SetAttribute("open", "");
     }
+    if (mOutput != nullptr) {
+        mOutput->SetAttribute("open", "");
+    }
+    if (mInput != nullptr) {
+        mInput->SetValue("");
+    }
+    Document::show();
     focus();
 }
 
 bool CommandConsole::focus() {
-    if (mInput != nullptr) {
-        mInput->SetValue("");
+    if (mInputActive && mInput != nullptr) {
         aurora::rmlui::set_input_type(aurora::rmlui::InputType::Text);
         return mInput->Focus(true);
     }
@@ -143,6 +132,30 @@ bool CommandConsole::focus() {
 }
 
 void CommandConsole::hide(bool close) {
+    close_input();
+    if (close) {
+        Document::hide(true);
+    } else if (!has_onscreen_messages()) {
+        Document::hide(false);
+    }
+
+    if (auto* doc = top_document()) {
+        doc->focus();
+    }
+}
+
+bool CommandConsole::visible() const {
+    return mInputActive && Document::visible();
+}
+
+bool CommandConsole::active() const {
+    return mInputActive && Document::active();
+}
+
+void CommandConsole::close_input() {
+    if (!mInputActive) {
+        return;
+    }
     mInputActive = false;
     mHistoryPos = -1;
     if (mConsole != nullptr) {
@@ -150,32 +163,30 @@ void CommandConsole::hide(bool close) {
     }
     if (mInput != nullptr) {
         mInput->SetValue("");
+        mInput->Blur();
     }
-    mPendingClose = close;
-    // Immediately refocus
-    if (auto* doc = top_document()) {
-        doc->focus();
+    if (mOutput != nullptr) {
+        mOutput->RemoveAttribute("open");
     }
 }
 
-void CommandConsole::executeFromInput() {
+void CommandConsole::execute_from_input() {
     if (mInput == nullptr) {
         return;
     }
     const Rml::String value = mInput->GetValue();
-    hide(true);
+    hide(false);
     if (!value.empty()) {
-        runCommand(value, mState, [this](std::string text) { ConsolePrint(std::move(text)); });
+        runCommand(value, mState, [this](std::string text) { append_message(std::move(text)); });
     }
-    mScrollToBottom = true;
 }
 
-void CommandConsole::navigateHistory(int dir) {
+void CommandConsole::navigate_history(int direction) {
     if (mState.history.empty() || mInput == nullptr) {
         return;
     }
     const int prev = mHistoryPos;
-    if (dir < 0) {
+    if (direction < 0) {
         if (mHistoryPos == -1) {
             mHistoryPos = (int)mState.history.size() - 1;
         } else if (mHistoryPos > 0) {
@@ -194,16 +205,100 @@ void CommandConsole::navigateHistory(int dir) {
     }
 }
 
-void CommandConsole::ConsolePrint(std::string text) {
-    mMsgHistory.push_back(text);
-    if ((int)mMsgHistory.size() > kMaxMsgHistory) {
-        mMsgHistory.erase(mMsgHistory.begin());
+void CommandConsole::scroll_messages(int pages) {
+    if (mOutput == nullptr) {
+        return;
     }
-    mOutputLines.push_back({std::move(text), kDurationNormal});
-    mScrollToBottom = true;
-    if ((int)mOutputLines.size() > kMaxStoredLines) {
-        mOutputLines.erase(mOutputLines.begin());
+    const float bottom = std::max(0.0f, mOutput->GetScrollHeight() - mOutput->GetClientHeight());
+    const float pageHeight = std::max(1.0f, mOutput->GetClientHeight() * 0.9f);
+    const float scrollTop =
+        std::clamp(mOutput->GetScrollTop() + static_cast<float>(pages) * pageHeight, 0.0f, bottom);
+    mOutput->SetScrollTop(scrollTop);
+    mStickToBottom = scrollTop >= bottom - 4.0f;
+}
+
+void CommandConsole::append_message(std::string text) {
+    auto* element = append(mOutput, "line");
+    if (element != nullptr) {
+        element->SetClass("cmd", is_command(text));
+        append_text(element, text);
     }
+
+    const auto now = clock::now();
+    mMessages.push_back({
+        .text = std::move(text),
+        .element = element,
+        .fadeAt = now + kMessageDuration - kFadeDuration,
+        .hideAt = now + kMessageDuration,
+    });
+
+    while (mMessages.size() > kMaxMessageHistory) {
+        if (auto* oldElement = mMessages.front().element; oldElement != nullptr) {
+            if (auto* parent = oldElement->GetParentNode()) {
+                parent->RemoveChild(oldElement);
+            }
+        }
+        mMessages.pop_front();
+    }
+    limit_visible_messages();
+    if (mConsole != nullptr) {
+        mConsole->RemoveAttribute("fading");
+    }
+
+    if (getSettings().backend.enableAdvancedSettings && !is_prelaunch_open() &&
+        !Document::visible())
+    {
+        Document::show();
+    }
+}
+
+void CommandConsole::limit_visible_messages() {
+    std::size_t visibleCount = 0;
+    for (auto it = mMessages.rbegin(); it != mMessages.rend(); ++it) {
+        if (it->expired) {
+            continue;
+        }
+        if (++visibleCount <= kMaxVisibleLines) {
+            continue;
+        }
+        it->expired = true;
+        if (it->element != nullptr) {
+            it->element->SetAttribute("expired", "");
+        }
+    }
+}
+
+void CommandConsole::update_message_lifetimes() {
+    const auto now = clock::now();
+    for (auto& message : mMessages) {
+        if (!message.fading && now >= message.fadeAt) {
+            message.fading = true;
+            if (message.element != nullptr) {
+                message.element->SetAttribute("fading", "");
+            }
+        }
+        if (!message.expired && now >= message.hideAt) {
+            message.expired = true;
+            if (message.element != nullptr) {
+                message.element->SetAttribute("expired", "");
+            }
+        }
+    }
+
+    const bool hasVisibleMessages = has_onscreen_messages();
+    const bool hasOpaqueMessages = std::ranges::any_of(
+        mMessages, [](const auto& message) { return !message.fading && !message.expired; });
+    if (mConsole != nullptr) {
+        if (hasVisibleMessages && !hasOpaqueMessages) {
+            mConsole->SetAttribute("fading", "");
+        } else {
+            mConsole->RemoveAttribute("fading");
+        }
+    }
+}
+
+bool CommandConsole::has_onscreen_messages() const {
+    return std::ranges::any_of(mMessages, [](const auto& message) { return !message.expired; });
 }
 
 }  // namespace dusk::ui

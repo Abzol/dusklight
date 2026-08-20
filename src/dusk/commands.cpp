@@ -558,7 +558,7 @@ void runCommand(std::string_view cmdLine, CommandState& state, const CommandOutp
             }
             dusk::game_clock::set_sim_rate((float)*hz);
         }
-        output(fmt::format(FMT_STRING("Sim rate: {} hz"), (int)dusk::game_clock::get_sim_rate()));
+        output(fmt::format(FMT_STRING("Sim rate: {:.0f} hz"), dusk::game_clock::get_sim_rate()));
         return;
     }
 

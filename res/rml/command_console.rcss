@@ -24,6 +24,7 @@ console {
     font-family: "Noto Mono";
     font-size: 14dp;
     color: #FFFFFF;
+    transition: background-color 0.8s linear-in-out;
 }
 
 output {
@@ -37,30 +38,44 @@ output {
 output[open] {
     height: 480dp;
     max-height: 480dp;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 console:not([open]) {
     pointer-events: none;
 }
 
+console:not([open])[fading] {
+    background-color: rgba(0, 0, 0, 0%);
+}
+
+console[open] {
+    background-color: rgba(0, 0, 0, 60%);
+    transition: none;
+}
+
 line {
     display: block;
     white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.8s linear-in-out;
+}
+
+output:not([open]) line[fading] {
+    opacity: 0;
+}
+
+output:not([open]) line[expired] {
+    display: none;
+}
+
+output[open] line {
+    opacity: 1;
+    transition: none;
 }
 
 line.cmd {
     color: #FFD966;
-}
-
-line.copyable {
-    color: #80C8FF;
-    cursor: pointer;
-}
-
-line.copyable:hover {
-    color: #FFFFFF;
-    background-color: rgba(255, 255, 255, 12%);
 }
 
 console input {
