@@ -7595,7 +7595,7 @@ bool dCamera_c::executeDebugFlyCam() {
             if (ImGui::IsKeyDown(ImGuiKey_Q)) rollInput -= 1.0f;
             if (ImGui::IsKeyDown(ImGuiKey_E)) rollInput += 1.0f;
         }
-        bool mouseValid = !io.WantCaptureMouse && io.MousePos.x >= 0.0f && io.MousePos.y >= 0.0f;
+        bool mouseValid = !io.WantCaptureMouse && io.MousePos.x >= 0.0f && io.MousePos.y >= 0.0f && ImGui::IsMouseDown(ImGuiMouseButton_Right);
         if (mouseValid && sFlyCamLastMousePos.x >= 0.0f) {
             cStickX -= (io.MousePos.x - sFlyCamLastMousePos.x) * 2.0f;
             cStickY -= (io.MousePos.y - sFlyCamLastMousePos.y) * 2.0f;
