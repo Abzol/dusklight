@@ -1441,7 +1441,7 @@ set(DUSK_FILES
         src/dusk/globals.cpp
         src/dusk/gyro.cpp
         src/dusk/game_combos.cpp
-        src/dusk/d_trigger_view.cpp
+        src/dusk/trigger_viewer.cpp
         #src/dusk/m_Do_ext_dusk.cpp
         src/dusk/hq_minimap.cpp
         src/dusk/imgui/ImGuiActorSpawner.cpp

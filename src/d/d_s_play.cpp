@@ -41,9 +41,9 @@
 
 #if TARGET_PC
 #include "dusk/autosave.h"
-#include "dusk/d_trigger_view.h"
 #include "dusk/memory.h"
 #include "dusk/mods/item.hpp"
+#include "dusk/trigger_viewer.h"
 #include "dusk/ui/ui.hpp"
 #include "mods/items.h"
 #endif

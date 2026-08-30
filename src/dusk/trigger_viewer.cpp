@@ -1,21 +1,25 @@
-#include "dusk/d_trigger_view.h"
-#include "dusk/settings.h"
-#include "d/d_debug_viewer.h"
-#include "d/d_com_inf_game.h"
-#include "d/d_stage.h"
-#include "d/d_path.h"
-#include "d/d_attention.h"
+#include "JSystem/JMath/JMath.h"
+#include "SSystem/SComponent/c_list.h"
+#include "SSystem/SComponent/c_tag.h"
 #include "d/actor/d_a_alink.h"
-#include "d/actor/d_a_kytag08.h"
 #include "d/actor/d_a_e_rb.h"
 #include "d/actor/d_a_e_rd.h"
+#include "d/actor/d_a_kytag08.h"
+#include "d/actor/d_a_scene_exit.h"
+#include "d/actor/d_a_swc00.h"
+#include "d/actor/d_a_tag_chgrestart.h"
+#include "d/actor/d_a_tag_mstop.h"
+#include "d/d_attention.h"
+#include "d/d_com_inf_game.h"
+#include "d/d_debug_viewer.h"
+#include "d/d_path.h"
+#include "d/d_stage.h"
+#include "dusk/settings.h"
+#include "dusk/trigger_viewer.h"
 #include "f_op/f_op_actor_mng.h"
 #include "f_op/f_op_actor_tag.h"
 #include "f_pc/f_pc_name.h"
 #include "m_Do/m_Do_mtx.h"
-#include "SSystem/SComponent/c_tag.h"
-#include "SSystem/SComponent/c_list.h"
-#include "JSystem/JMath/JMath.h"
 
 namespace dusk {
 namespace TriggerView {
@@ -42,9 +46,6 @@ static void searchActorForCallback(s16 actorName, DrawCallback callback) {
 }
 
 static void drawSceneExit(fopAc_ac_c* actor) {
-    struct daScex_c : public fopAc_ac_c {
-        /* 0x568 */ Mtx mMatrix;
-    };
     daScex_c* scex = (daScex_c*)actor;
 
     cXyz points[8];
@@ -65,12 +66,7 @@ static void drawSceneExit(fopAc_ac_c* actor) {
 }
 
 static void drawMidnaStop(fopAc_ac_c* actor) {
-    struct daMidnaStop_c : public fopAc_ac_c {
-        /* 0x568 */ u8 data[0x5C0 - 0x568];
-        /* 0x5C0 */ f32 mRangeXZ;
-        /* 0x5C4 */ f32 mRangeY;
-    };
-    daMidnaStop_c* mstop = (daMidnaStop_c*)actor;
+    daTagMstop_c* mstop = (daTagMstop_c*)actor;
 
     GXColor color = {0x4A, 0x36, 0xBA, s_opacity};
     dDbVw_drawCylinderXlu(mstop->current.pos, mstop->scale.x * 100.0f, mstop->scale.y, color, 1);
@@ -88,12 +84,6 @@ static void drawPlumSearch(fopAc_ac_c* actor) {
 }
 
 static void drawSwitchArea(fopAc_ac_c* actor) {
-    struct daSwc00_c : public fopAc_ac_c {
-        /* 0x568 */ cXyz mStart;
-        /* 0x574 */ cXyz mEnd;
-        /* 0x580 */ u16 mEventID;
-        /* 0x582 */ u8 mAction;
-    };
     daSwc00_c* swc = (daSwc00_c*)actor;
     int shape_type = (fopAcM_GetParam(actor) >> 0x12) & 3;
 
@@ -101,9 +91,9 @@ static void drawSwitchArea(fopAc_ac_c* actor) {
     if (shape_type == 3) {
         dDbVw_drawCylinderXlu(swc->current.pos, JMAFastSqrt(swc->scale.x) - 30.0f, swc->scale.y, color, 1);
     } else if (shape_type == 0) {
-        cXyz size = swc->mEnd - swc->mStart;
+        cXyz size = swc->field_0x574 - swc->field_0x568;
         size *= 0.5f;
-        cXyz pos = swc->mStart + size;
+        cXyz pos = swc->field_0x568 + size;
         csXyz angle(swc->current.angle.x, swc->current.angle.y, swc->current.angle.z);
         dDbVw_drawCubeXlu(pos, size, angle, color);
     }
@@ -240,9 +230,6 @@ static void drawCurrentRoomPaths() {
 }
 
 static void drawCheckpointTag(fopAc_ac_c* actor) {
-    struct daTagChgRestart_c : public fopAc_ac_c {
-        /* 0x568 */ cXyz mVertices[4];
-    };
     daTagChgRestart_c* chk = (daTagChgRestart_c*)actor;
 
     GXColor color = {0x29, 0xF0, 0xFF, s_opacity};
