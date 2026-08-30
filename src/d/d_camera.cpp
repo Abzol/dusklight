@@ -30,6 +30,7 @@
 
 #if TARGET_PC
 #include "dusk/camera_operators.hpp"
+#include "dusk/commands.hpp"
 #include "dusk/frame_interpolation.h"
 #include "dusk/logging.h"
 #include "dusk/action_bindings.h"
@@ -1054,6 +1055,11 @@ void dCamera_c::debugDrawInit() {
 bool dCamera_c::Run() {
 #if TARGET_PC
     ResetView();
+    if (dusk::isCameraDetached()) {
+        mFrameCounter++;
+        mTicks++;
+        return true;
+    }
     if (executeDebugFlyCam() || dusk::mods::camera_run_operators(this)) {
         mFrameCounter++;
         mTicks++;
@@ -11123,6 +11129,9 @@ camera_class* dCam_getCamera() {
 
 dCamera_c* dCam_getBody() {
     camera_process_class* camera = (camera_process_class*)dCam_getCamera();
+#if TARGET_PC
+    if (camera == nullptr) { return nullptr; }
+#endif
     return &camera->mCamera;
 }
 
