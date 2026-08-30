@@ -217,6 +217,8 @@ void handle_event(const SDL_Event& event) noexcept {
             });
         }
         sConnectedGamepads.erase(event.gdevice.which);
+    } else if (event.type == SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED) {
+        apply_scale();
     }
     if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST) {
         sConsoleShortcutHeld = false;
@@ -525,6 +527,16 @@ bool consume_menu_notification_request() noexcept {
     const bool requested = sMenuNotificationRequested;
     sMenuNotificationRequested = false;
     return requested;
+}
+
+void apply_scale() noexcept {
+    const auto userScale = getSettings().video.uiScale.getValue();
+    auto scale = 0.0f;
+    if (userScale != 0) {
+        const auto displayScale = aurora::window::get_window_size().scale;
+        scale = static_cast<float>(userScale) / 100.0f * (displayScale > 0.0f ? displayScale : 1.0f);
+    }
+    aurora::rmlui::set_ui_scale(scale);
 }
 
 }  // namespace dusk::ui
