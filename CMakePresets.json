@@ -19,11 +19,7 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL",
-        "TRACY_ENABLE": {
-          "type": "BOOL",
-          "value": false
-        }
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL"
       }
     },
     {
